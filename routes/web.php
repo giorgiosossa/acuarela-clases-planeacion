@@ -27,11 +27,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('levels', LevelController::class);
 
     // Rutas de Skills
-    Route::get('/levels/{level}/skills', [SkillController::class, 'index'])->name('skills.index');
-    Route::post('/skills', [SkillController::class, 'store'])->name('skills.store');
-    Route::put('/skills/{skill}', [SkillController::class, 'update'])->name('skills.update');
-    Route::delete('/skills/{skill}', [SkillController::class, 'destroy'])->name('skills.destroy');
-    Route::post('/skills/reorder', [SkillController::class, 'reorder'])->name('skills.reorder');
+    Route::post('/skills/modal', [SkillController::class, 'storeFromModal']);
+    Route::post('/skills/reorder', [SkillController::class, 'reorder']);
+    Route::put('/skills/{skill}', [SkillController::class, 'update']);
+    Route::delete('/skills/{skill}', [SkillController::class, 'destroy']);
 });
 
 require __DIR__.'/settings.php';

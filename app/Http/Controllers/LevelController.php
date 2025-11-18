@@ -16,11 +16,11 @@ class LevelController extends Controller
             ->latest()
             ->paginate(10);
 
-        $skills = Skill::all();
+
 
         return Inertia::render('Levels/index', [
             'levels' => $levels,
-            'skills' => $skills,
+
 
         ]);
     }
@@ -28,11 +28,11 @@ class LevelController extends Controller
     public function create()
     {
         $programs = Program::all();
-        $skills = Skill::all();
+
 
         return Inertia::render('Levels/Create', [
             'programs' => $programs,
-            'skills' => $skills,
+
             'canCreateProgram' => true
         ]);
     }
@@ -45,10 +45,11 @@ class LevelController extends Controller
             'swimmer_paraments' => 'nullable|string'
         ]);
 
-        Level::create($validated);
+        $level = Level::create($validated);
 
-        return redirect('/levels')
-            ->with('success', 'Nivel creado exitosamente.');
+        // ✅ Redirigir a Edit en lugar de Index
+        return redirect("/levels/{$level->id}/edit")
+            ->with('success', 'Nivel creado exitosamente. Ahora puedes agregar habilidades.');
     }
 
     public function edit(Level $level)

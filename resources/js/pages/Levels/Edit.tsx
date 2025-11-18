@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { FormEventHandler, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,32 +27,20 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Plus, CheckCircle2, List, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, CheckCircle2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-    AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import SkillModal from '@/components/skill-modal';
+import SkillsManager from '@/components/SkillsManager';
 
 interface Program {
     id: number;
     name: string;
+}
+
+interface Skill {
+    id: number;
+    name: string;
+    index: number;
+    level_id: number;
 }
 
 interface Level {
@@ -66,10 +54,11 @@ interface Level {
 interface Props {
     level: Level;
     programs: Program[];
+    skills: Skill[];
     canCreateProgram?: boolean;
 }
 
-export default function Edit({ level, programs: initialPrograms, canCreateProgram = true }: Props) {
+export default function Edit({ level, programs: initialPrograms, skills, canCreateProgram = true }: Props) {
     const [programs, setPrograms] = useState<Program[]>(initialPrograms);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isCreatingProgram, setIsCreatingProgram] = useState(false);
@@ -106,17 +95,11 @@ export default function Edit({ level, programs: initialPrograms, canCreateProgra
             const result = await response.json();
 
             if (response.ok && result.success) {
-                // Agregar el nuevo programa a la lista
                 const newProgram = result.program;
                 setPrograms([...programs, newProgram]);
-
-                // Seleccionar automáticamente el nuevo programa
                 setData('program_id', newProgram.id.toString());
-
-                // Mostrar mensaje de éxito
                 setSuccessMessage(result.message);
 
-                // Cerrar modal después de 1.5 segundos
                 setTimeout(() => {
                     setIsModalOpen(false);
                     setNewProgramName('');
@@ -144,7 +127,7 @@ export default function Edit({ level, programs: initialPrograms, canCreateProgra
             <Head title="Editar Nivel" />
 
             <div className="py-12">
-                <div className="mx-auto max-w-3xl sm:px-6 lg:px-8">
+                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                     <div className="mb-6">
                         <Button asChild variant="ghost">
                             <Link href="/levels">
@@ -154,125 +137,135 @@ export default function Edit({ level, programs: initialPrograms, canCreateProgra
                         </Button>
                     </div>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-2xl">Editar Nivel</CardTitle>
-                            <CardDescription>
-                                Modifica la información del nivel
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={submit} className="space-y-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="name">
-                                        Nombre del Nivel
-                                        <span className="text-destructive ml-1">*</span>
-                                    </Label>
-                                    <Input
-                                        id="name"
-                                        type="text"
-                                        value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
-                                        placeholder="Ej: Nivel 1"
-                                        className={errors.name ? 'border-destructive' : ''}
-                                        autoFocus
-                                    />
-                                    {errors.name && (
-                                        <p className="text-sm text-destructive">
-                                            {errors.name}
-                                        </p>
-                                    )}
-                                </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Formulario de edición del nivel */}
+                        <div>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-2xl">Editar Nivel</CardTitle>
+                                    <CardDescription>
+                                        Modifica la información del nivel
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <form onSubmit={submit} className="space-y-6">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="name">
+                                                Nombre del Nivel
+                                                <span className="text-destructive ml-1">*</span>
+                                            </Label>
+                                            <Input
+                                                id="name"
+                                                type="text"
+                                                value={data.name}
+                                                onChange={(e) => setData('name', e.target.value)}
+                                                placeholder="Ej: Nivel 1"
+                                                className={errors.name ? 'border-destructive' : ''}
+                                                autoFocus
+                                            />
+                                            {errors.name && (
+                                                <p className="text-sm text-destructive">
+                                                    {errors.name}
+                                                </p>
+                                            )}
+                                        </div>
 
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between">
-                                        <Label htmlFor="program_id">
-                                            Programa
-                                            <span className="text-destructive ml-1">*</span>
-                                        </Label>
-                                        {canCreateProgram && (
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <Label htmlFor="program_id">
+                                                    Programa
+                                                    <span className="text-destructive ml-1">*</span>
+                                                </Label>
+                                                {canCreateProgram && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={handleOpenModal}
+                                                    >
+                                                        <Plus className="mr-2 h-4 w-4" />
+                                                        Crear Programa
+                                                    </Button>
+                                                )}
+                                            </div>
+                                            <Select
+                                                value={data.program_id}
+                                                onValueChange={(value) => setData('program_id', value)}
+                                            >
+                                                <SelectTrigger
+                                                    className={errors.program_id ? 'border-destructive' : ''}
+                                                >
+                                                    <SelectValue placeholder="Selecciona un programa" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {programs.length > 0 ? (
+                                                        programs.map((program) => (
+                                                            <SelectItem
+                                                                key={program.id}
+                                                                value={program.id.toString()}
+                                                            >
+                                                                {program.name}
+                                                            </SelectItem>
+                                                        ))
+                                                    ) : (
+                                                        <div className="p-2 text-sm text-muted-foreground">
+                                                            No hay programas disponibles
+                                                        </div>
+                                                    )}
+                                                </SelectContent>
+                                            </Select>
+                                            {errors.program_id && (
+                                                <p className="text-sm text-destructive">
+                                                    {errors.program_id}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="swimmer_paraments">
+                                                Parámetros del Nadador
+                                            </Label>
+                                            <Textarea
+                                                id="swimmer_paraments"
+                                                value={data.swimmer_paraments}
+                                                onChange={(e) =>
+                                                    setData('swimmer_paraments', e.target.value)
+                                                }
+                                                placeholder="Describe los parámetros del nadador para este nivel..."
+                                                rows={5}
+                                                className={errors.swimmer_paraments ? 'border-destructive' : ''}
+                                            />
+                                            {errors.swimmer_paraments && (
+                                                <p className="text-sm text-destructive">
+                                                    {errors.swimmer_paraments}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <div className="flex items-center justify-end gap-4">
                                             <Button
                                                 type="button"
                                                 variant="outline"
-                                                size="sm"
-                                                onClick={handleOpenModal}
+                                                asChild
                                             >
-                                                <Plus className="mr-2 h-4 w-4" />
-                                                Crear Programa
+                                                <Link href="/levels">
+                                                    Cancelar
+                                                </Link>
                                             </Button>
-                                        )}
-                                    </div>
-                                    <Select
-                                        value={data.program_id}
-                                        onValueChange={(value) => setData('program_id', value)}
-                                    >
-                                        <SelectTrigger
-                                            className={errors.program_id ? 'border-destructive' : ''}
-                                        >
-                                            <SelectValue placeholder="Selecciona un programa" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {programs.length > 0 ? (
-                                                programs.map((program) => (
-                                                    <SelectItem
-                                                        key={program.id}
-                                                        value={program.id.toString()}
-                                                    >
-                                                        {program.name}
-                                                    </SelectItem>
-                                                ))
-                                            ) : (
-                                                <div className="p-2 text-sm text-muted-foreground">
-                                                    No hay programas disponibles
-                                                </div>
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                    {errors.program_id && (
-                                        <p className="text-sm text-destructive">
-                                            {errors.program_id}
-                                        </p>
-                                    )}
-                                </div>
+                                            <Button type="submit" disabled={processing}>
+                                                {processing ? 'Actualizando...' : 'Actualizar Nivel'}
+                                            </Button>
+                                        </div>
+                                    </form>
+                                </CardContent>
+                            </Card>
+                        </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="swimmer_paraments">
-                                        Parámetros del Nadador
-                                    </Label>
-                                    <Textarea
-                                        id="swimmer_paraments"
-                                        value={data.swimmer_paraments}
-                                        onChange={(e) =>
-                                            setData('swimmer_paraments', e.target.value)
-                                        }
-                                        placeholder="Describe los parámetros del nadador para este nivel..."
-                                        rows={5}
-                                        className={errors.swimmer_paraments ? 'border-destructive' : ''}
-                                    />
-                                    {errors.swimmer_paraments && (
-                                        <p className="text-sm text-destructive">
-                                            {errors.swimmer_paraments}
-                                        </p>
-                                    )}
-                                </div>
-
-                                <div className="flex items-center justify-end gap-4">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        asChild
-                                    >
-                                        <Link href="/levels">
-                                            Cancelar
-                                        </Link>
-                                    </Button>
-                                    <Button type="submit" disabled={processing}>
-                                        {processing ? 'Actualizando...' : 'Actualizar Nivel'}
-                                    </Button>
-                                </div>
-                            </form>
-                        </CardContent>
-                    </Card>
+                        {/* Gestión de habilidades */}
+                        <div>
+                            <SkillsManager levelId={level.id} initialSkills={skills} />
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -5,31 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\Skill;
 use App\Models\Level;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class SkillController extends Controller
 {
-    public function index(Level $level)
-    {
-        $skills = $level->skills()
-            ->orderBy('index')
-            ->get();
-
-        return Inertia::render('Skills/Index', [
-            'level' => $level->load('program'),
-            'skills' => $skills
-        ]);
-    }
-
-    public function store(Request $request)
+    // Crear skill desde modal (sin redirección)
+    public function storeFromModal(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:skills',
+            'name' => 'required|string|max:255|unique:skills,name',
             'level_id' => 'required|exists:levels,id',
-            'index' => 'required|integer|min:0'
         ]);
 
-        $skill = Skill::create($validated);
+        // Obtener el índice más alto para ese level y sumar 1
+        $maxIndex = Skill::where('level_id', $validated['level_id'])->max('index') ?? -1;
+
+        $skill = Skill::create([
+            'name' => $validated['name'],
+            'level_id' => $validated['level_id'],
+            'index' => $maxIndex + 1,
+        ]);
 
         return response()->json([
             'success' => true,
@@ -38,11 +33,33 @@ class SkillController extends Controller
         ]);
     }
 
+    // Actualizar orden de skills con drag and drop
+    public function reorder(Request $request)
+    {
+        $validated = $request->validate([
+            'skills' => 'required|array',
+            'skills.*.id' => 'required|exists:skills,id',
+            'skills.*.index' => 'required|integer|min:0',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['skills'] as $skillData) {
+                Skill::where('id', $skillData['id'])
+                    ->update(['index' => $skillData['index']]);
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Orden actualizado exitosamente.'
+        ]);
+    }
+
+    // Actualizar una skill
     public function update(Request $request, Skill $skill)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:skills,name,' . $skill->id,
-            'index' => 'required|integer|min:0'
         ]);
 
         $skill->update($validated);
@@ -54,30 +71,14 @@ class SkillController extends Controller
         ]);
     }
 
+    // Eliminar una skill
     public function destroy(Skill $skill)
     {
         $skill->delete();
 
-        return redirect()->back()
-            ->with('success', 'Habilidad eliminada exitosamente.');
-    }
-
-    public function reorder(Request $request)
-    {
-        $validated = $request->validate([
-            'skills' => 'required|array',
-            'skills.*.id' => 'required|exists:skills,id',
-            'skills.*.index' => 'required|integer|min:0'
-        ]);
-
-        foreach ($validated['skills'] as $skillData) {
-            Skill::where('id', $skillData['id'])
-                ->update(['index' => $skillData['index']]);
-        }
-
         return response()->json([
             'success' => true,
-            'message' => 'Orden actualizado exitosamente.'
+            'message' => 'Habilidad eliminada exitosamente.'
         ]);
     }
 }
