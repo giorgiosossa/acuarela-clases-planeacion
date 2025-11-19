@@ -51,13 +51,13 @@ interface Props {
 }
 
 const DAYS_OPTIONS = [
-    'Lunes',
-    'Martes',
-    'Miércoles',
-    'Jueves',
+    'Lunes y Miercoles',
+    'Martes y Jueves',
+    'Lunes, Miercoles y Viernes',
+    'Miercoles',
     'Viernes',
     'Sábado',
-    'Domingo',
+    'Especial',
 ];
 
 const DAYS_MAP: Record<string, string> = {

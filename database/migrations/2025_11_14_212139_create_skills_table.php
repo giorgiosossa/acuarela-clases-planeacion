@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->integer('index');
-            $table->foreignId('level_id')->nullable();
+            $table->foreignId('level_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();
         });
     }

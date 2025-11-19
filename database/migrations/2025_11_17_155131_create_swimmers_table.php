@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('swimmers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->foreignId('skill_id')->nullable();
+            $table->foreignId('skill_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('group_id')->nullable();
             $table->timestamps();
         });

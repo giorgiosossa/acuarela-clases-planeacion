@@ -6,6 +6,7 @@ use App\Models\Skill;
 use App\Models\Level;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SkillController extends Controller
 {
@@ -74,11 +75,23 @@ class SkillController extends Controller
     // Eliminar una skill
     public function destroy(Skill $skill)
     {
-        $skill->delete();
+        try {
+            Log::info('Eliminando skill ID: ' . $skill->id);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Habilidad eliminada exitosamente.'
-        ]);
+            $skill->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Habilidad eliminada exitosamente.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error al eliminar skill: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -387,7 +387,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                                             </TableCell>
                                                             <TableCell>
                                                                 <Select
-                                                                    value={swimmer.skill_id.toString()}
+                                                                    value={swimmer.skill_id?.toString() ?? ''}
                                                                     onValueChange={(value) =>
                                                                         handleUpdateSwimmerSkill(
                                                                             swimmer.id,

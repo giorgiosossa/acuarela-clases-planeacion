@@ -11,10 +11,13 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import levels  from "@/routes/levels" ;
+import groups from '@/routes/groups';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
 import AppLogo from './app-logo';
+import { day } from '@/routes/groups';
 
 const mainNavItems: NavItem[] = [
     {
@@ -22,6 +25,19 @@ const mainNavItems: NavItem[] = [
         href: dashboard(),
         icon: LayoutGrid,
     },
+
+    {
+        title: 'Groups',
+        href: groups.index(),
+        icon: LayoutGrid,
+    },
+
+    {
+        title: 'Levels',
+        href: levels.index(),
+        icon: LayoutGrid,
+    },
+
 ];
 
 const footerNavItems: NavItem[] = [

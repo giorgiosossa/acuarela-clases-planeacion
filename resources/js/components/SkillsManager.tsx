@@ -73,7 +73,7 @@ function SortableSkillItem({ skill, onEdit, onDelete }: {
         <div
             ref={setNodeRef}
             style={style}
-            className="flex items-center gap-2 p-3 bg-white border rounded-lg hover:border-primary transition-colors"
+            className="flex dark:bg-black items-center gap-2 p-3 bg-white border rounded-lg hover:border-primary transition-colors"
         >
             <button
                 className="cursor-grab active:cursor-grabbing touch-none"
@@ -236,16 +236,28 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
     const handleDeleteSkill = async (id: number) => {
         if (!confirm('¿Estás seguro de eliminar esta habilidad?')) return;
 
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        if (!csrfToken) {
+            console.error('Token CSRF no encontrado');
+            alert('Error: Token de seguridad no disponible');
+            return;
+        }
+
         try {
             const response = await fetch(`/skills/${id}`, {
                 method: 'DELETE',
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                 },
             });
 
             if (response.ok) {
                 setSkills(skills.filter(s => s.id !== id));
+            } else {
+                console.error('Error en la respuesta:', response.status);
             }
         } catch (error) {
             console.error('Error al eliminar:', error);

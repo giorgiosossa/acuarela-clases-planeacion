@@ -23,7 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     })->name('dashboard');
 
     // Rutas de Programs
-    Route::resource('programs', ProgramController::class);
+    Route::resource('programs', ProgramController::class)->names('programs');
     Route::post('/programs/modal', [ProgramController::class, 'storeFromModal'])->name('programs.storeFromModal');
 
     // Rutas de Levels

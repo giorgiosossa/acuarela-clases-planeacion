@@ -28,7 +28,7 @@ class GroupController extends Controller
         return Inertia::render('Groups/Index', [
             'groupsByDay' => $groupsByDay,
             'availableDays' => $availableDays,
-            'levels' => $levels, // ← AGREGAR ESTO
+            'levels' => $levels, 
         ]);
     }
 
