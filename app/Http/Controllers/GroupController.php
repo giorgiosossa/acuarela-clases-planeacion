@@ -28,7 +28,7 @@ class GroupController extends Controller
         return Inertia::render('Groups/Index', [
             'groupsByDay' => $groupsByDay,
             'availableDays' => $availableDays,
-            'levels' => $levels, 
+            'levels' => $levels,
         ]);
     }
 
@@ -86,18 +86,11 @@ class GroupController extends Controller
     // Eliminar grupo
     public function destroy(Group $group)
     {
-        // Opcional: puedes decidir qué hacer con los swimmers
-        // Opción 1: Eliminar swimmers del grupo
-        $group->swimmers()->update(['group_id' => null]);
-
-        // Opción 2: Eliminar swimmers completamente
-        // $group->swimmers()->delete();
 
         $group->delete();
 
         return response()->json([
-            'success' => true,
-            'message' => 'Grupo eliminado exitosamente.'
+
         ]);
     }
 

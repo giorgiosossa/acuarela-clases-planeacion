@@ -138,6 +138,25 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
         }
     };
 
+    //Eliminar grupo
+    const handleDeleteGroup = async (groupId: number) => {
+        if (confirm('Are you sure you want to delete this record?')) {
+            const response = await fetch(`/groups/${groupId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+            });
+
+            if(response.ok){
+                setGroups(groups=> groups.filter(g=> g.id !== groupId))
+            }
+        }
+    };
+
+
+
+
     // Abrir modal para crear swimmer
     const openCreateSwimmerModal = async (groupId: number, levelId: number) => {
         setCurrentGroupId(groupId);
@@ -342,13 +361,24 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                                     Nivel: {group.level.name}
                                                 </CardDescription>
                                             </div>
-                                            <Button
-                                                size="sm"
-                                                onClick={() => openCreateSwimmerModal(group.id, group.level_id)}
-                                            >
-                                                <UserPlus className="mr-2 h-4 w-4" />
-                                                Agregar Nadador
-                                            </Button>
+                                            <div className='flex items-end justify-end gap-1.5'>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => openCreateSwimmerModal(group.id, group.level_id)}
+                                                >
+                                                    <UserPlus className="mr-2 h-4 w-4" />
+                                                    Agregar Nadador
+                                                </Button>
+
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    onClick={() => handleDeleteGroup(group.id)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+
                                         </div>
                                     </CardHeader>
                                     <CardContent className="space-y-4">

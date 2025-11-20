@@ -36,12 +36,5 @@ class Skill extends Model
         return $query->orderBy('index');
     }
 
-    protected static function booted()
-    {
-        static::deleting(function ($skill) {
-
-            // Poner en null los swimmers que tenían esta skill
-            $skill->currentSwimmers()->update(['skill_id' => null]);
-        });
-    }
+   
 }

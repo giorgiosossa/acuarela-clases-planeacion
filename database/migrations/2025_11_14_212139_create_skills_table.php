@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->integer('index');
-            $table->foreignId('level_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignIdFor(\App\Models\Level::class)->nullable()->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }
