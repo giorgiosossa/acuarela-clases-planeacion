@@ -8,6 +8,8 @@ use App\Http\Controllers\LevelController;
 use App\Http\Controllers\SwimmerController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\SkillController;
+use App\Http\Controllers\GroupExportController;
+
 
 
 
@@ -42,6 +44,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/groups/{group}/note', [GroupController::class, 'updateNote']);
     Route::delete('/groups/{group}', [GroupController::class, 'destroy']);
     Route::get('/groups/level/{levelId}/skills', [GroupController::class, 'getLevelSkills']);
+    Route::get('/groups/report', [GroupController::class, 'report'])->name('groups.report');
+    Route::get('/groups/export-pdf', [GroupController::class, 'exportPdf'])->name('groups.export');
 
     // Rutas para Swimmers
     Route::post('/swimmers/modal', [SwimmerController::class, 'storeFromModal']);

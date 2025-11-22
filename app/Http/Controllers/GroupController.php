@@ -6,6 +6,7 @@ use App\Models\Group;
 use App\Models\Level;
 use App\Models\Skill;
 use App\Models\Swimmer;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -105,5 +106,28 @@ class GroupController extends Controller
             'success' => true,
             'skills' => $skills
         ]);
+    }
+
+    //  Método para la página de reporte
+    public function report()
+    {
+        $groups = Group::with('level')->orderBy('created_at', 'desc')->get();
+
+        return Inertia::render('Groups/Report', [
+            'groups' => $groups
+        ]);
+    }
+
+    // Método para exportar PDF
+    public function exportPdf()
+    {
+        $groups = Group::orderBy('created_at', 'desc')->get();
+
+        $pdf = Pdf::loadView('pdf.groups', [
+            'groups' => $groups,
+            'date' => now()->format('d/m/Y H:i')
+        ]);
+
+        return $pdf->download('grupos-' . now()->format('Y-m-d') . '.pdf');
     }
 }
