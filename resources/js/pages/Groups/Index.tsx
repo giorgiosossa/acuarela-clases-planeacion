@@ -51,10 +51,10 @@ interface Props {
 }
 
 const DAYS_OPTIONS = [
-    'Lunes y Miercoles',
-    'Martes y Jueves',
-    'Lunes, Miercoles y Viernes',
+    'Lunes',
+    'Martes',
     'Miercoles',
+    'Jueves',
     'Viernes',
     'Sábado',
     'Especial',

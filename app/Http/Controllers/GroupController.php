@@ -111,7 +111,9 @@ class GroupController extends Controller
     //  Método para la página de reporte
     public function report()
     {
-        $groups = Group::with('level')->orderBy('created_at', 'desc')->get();
+        $groups = Group::with('level', 'swimmers.currentSkill')
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return Inertia::render('Groups/Report', [
             'groups' => $groups

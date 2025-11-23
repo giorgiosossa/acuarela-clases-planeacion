@@ -155,8 +155,6 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
     };
 
 
-
-
     // Abrir modal para crear swimmer
     const openCreateSwimmerModal = async (groupId: number, levelId: number) => {
         setCurrentGroupId(groupId);

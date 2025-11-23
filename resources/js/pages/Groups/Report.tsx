@@ -20,11 +20,18 @@ import {
 } from '@/components/ui/table';
 import { FileDown, Search, ArrowLeft } from 'lucide-react';
 
+interface Skill{
+    name: string;
+    index: number;
+}
 interface Level {
     id: number;
     name: string;
 }
-
+interface Swimmer {
+    name: string;
+    current_skill: Skill;
+}
 interface Group {
     id: number;
     hour: string;
@@ -32,6 +39,7 @@ interface Group {
     note: string;
     level_id: number;
     level: Level;
+    swimmers: Swimmer[];
     created_at: string;
 }
 
@@ -111,21 +119,20 @@ export default function Report({ groups: initialGroups }: Props) {
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
-                                            <TableHead className="w-[80px]">ID</TableHead>
+
                                             <TableHead>Hora</TableHead>
                                             <TableHead>Días</TableHead>
                                             <TableHead>Nivel</TableHead>
-                                            <TableHead className="hidden lg:table-cell">Notas</TableHead>
-                                            <TableHead className="text-right">Fecha de Creación</TableHead>
+
+                                            <TableHead>Objetivos</TableHead>
+
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {filteredGroups.length > 0 ? (
                                             filteredGroups.map((group) => (
                                                 <TableRow key={group.id}>
-                                                    <TableCell className="font-medium">
-                                                        #{group.id}
-                                                    </TableCell>
+
                                                     <TableCell className="font-semibold">
                                                         {group.hour}
                                                     </TableCell>
@@ -137,16 +144,15 @@ export default function Report({ groups: initialGroups }: Props) {
                                                             {group.level?.name}
                                                         </span>
                                                     </TableCell>
-                                                    <TableCell className="text-muted-foreground hidden lg:table-cell max-w-xs truncate">
-                                                        {group.note || 'Sin notas'}
+
+
+                                                    <TableCell>
+                                                        {[...new Set(
+                                                        group.swimmers.map((swimmer) => swimmer.current_skill.index + 1)
+                                                        )].join('-')}
+
                                                     </TableCell>
-                                                    <TableCell className="text-right">
-                                                        {new Date(group.created_at).toLocaleDateString('es-MX', {
-                                                            year: 'numeric',
-                                                            month: 'short',
-                                                            day: 'numeric'
-                                                        })}
-                                                    </TableCell>
+
                                                 </TableRow>
                                             ))
                                         ) : (
