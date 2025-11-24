@@ -27,8 +27,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Plus, Calendar, Users, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Plus, Calendar, Users, CheckCircle2, ChevronRight, ChevronsUpDown, X } from 'lucide-react';
 
 interface Level {
     id: number;
@@ -53,7 +59,7 @@ interface Props {
 const DAYS_OPTIONS = [
     'Lunes',
     'Martes',
-    'Miercoles',
+    'Miércoles',
     'Jueves',
     'Viernes',
     'Sábado',
@@ -72,15 +78,32 @@ const DAYS_MAP: Record<string, string> = {
 
 export default function Index({ groupsByDay, availableDays, levels }: Props) {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isDaysPopoverOpen, setIsDaysPopoverOpen] = useState(false);
     const [newGroup, setNewGroup] = useState({
         hour: '',
-        days: '',
+        days: [] as string[],
         level_id: '',
         note: '',
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+
+    const toggleDay = (day: string) => {
+        setNewGroup(prev => ({
+            ...prev,
+            days: prev.days.includes(day)
+                ? prev.days.filter(d => d !== day)
+                : [...prev.days, day]
+        }));
+    };
+
+    const removeDay = (day: string) => {
+        setNewGroup(prev => ({
+            ...prev,
+            days: prev.days.filter(d => d !== day)
+        }));
+    };
 
     const handleCreateGroup = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -94,7 +117,10 @@ export default function Index({ groupsByDay, availableDays, levels }: Props) {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
-                body: JSON.stringify(newGroup),
+                body: JSON.stringify({
+                    ...newGroup,
+                    days: newGroup.days.join(', '), // Convertir array a string separado por comas
+                }),
             });
 
             const result = await response.json();
@@ -104,9 +130,8 @@ export default function Index({ groupsByDay, availableDays, levels }: Props) {
 
                 setTimeout(() => {
                     setIsCreateModalOpen(false);
-                    setNewGroup({ hour: '', days: '', level_id: '', note: '' });
+                    setNewGroup({ hour: '', days: [], level_id: '', note: '' });
                     setSuccessMessage('');
-                    // Recargar la página para mostrar el nuevo grupo
                     router.reload();
                 }, 1500);
             } else {
@@ -120,7 +145,7 @@ export default function Index({ groupsByDay, availableDays, levels }: Props) {
     };
 
     const openCreateModal = () => {
-        setNewGroup({ hour: '', days: '', level_id: '', note: '' });
+        setNewGroup({ hour: '', days: [], level_id: '', note: '' });
         setError('');
         setSuccessMessage('');
         setIsCreateModalOpen(true);
@@ -231,25 +256,83 @@ export default function Index({ groupsByDay, availableDays, levels }: Props) {
                                 </Alert>
                             )}
 
+                            {/* Selector múltiple de días */}
                             <div className="space-y-2">
                                 <Label htmlFor="days">
-                                    Día <span className="text-destructive ml-1">*</span>
+                                    Días <span className="text-destructive ml-1">*</span>
                                 </Label>
-                                <Select
-                                    value={newGroup.days}
-                                    onValueChange={(value) => setNewGroup({ ...newGroup, days: value })}
-                                >
-                                    <SelectTrigger className={error && !newGroup.days ? 'border-destructive' : ''}>
-                                        <SelectValue placeholder="Selecciona un día" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {DAYS_OPTIONS.map((day) => (
-                                            <SelectItem key={day} value={day}>
+
+                                <Popover open={isDaysPopoverOpen} onOpenChange={setIsDaysPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={isDaysPopoverOpen}
+                                            className={`w-full justify-between ${error && newGroup.days.length === 0 ? 'border-destructive' : ''}`}
+                                        >
+                                            {newGroup.days.length === 0 ? (
+                                                <span className="text-muted-foreground">Selecciona días...</span>
+                                            ) : (
+                                                <span>{newGroup.days.length} {newGroup.days.length === 1 ? 'día seleccionado' : 'días seleccionados'}</span>
+                                            )}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-full p-0" align="start">
+                                        <div className="p-2 space-y-1">
+                                            {DAYS_OPTIONS.map((day) => (
+                                                <div
+                                                    key={day}
+                                                    className="flex items-center space-x-2 rounded-sm px-2 py-1.5 hover:bg-accent cursor-pointer"
+                                                    onClick={() => toggleDay(day)}
+                                                >
+                                                    <Checkbox
+                                                        checked={newGroup.days.includes(day)}
+                                                        onCheckedChange={() => toggleDay(day)}
+                                                    />
+                                                    <label className="flex-1 cursor-pointer text-sm">
+                                                        {day}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {newGroup.days.length > 0 && (
+                                            <div className="border-t p-2">
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="w-full"
+                                                    onClick={() => setNewGroup({ ...newGroup, days: [] })}
+                                                >
+                                                    Limpiar selección
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </PopoverContent>
+                                </Popover>
+
+                                {/* Chips de días seleccionados */}
+                                {newGroup.days.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {newGroup.days.map((day) => (
+                                            <div
+                                                key={day}
+                                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-sm"
+                                            >
                                                 {day}
-                                            </SelectItem>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeDay(day)}
+                                                    className="hover:bg-primary-foreground/20 rounded-sm p-0.5"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </div>
                                         ))}
-                                    </SelectContent>
-                                </Select>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-2">

@@ -28,6 +28,12 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
     Table,
     TableBody,
     TableCell,
@@ -36,7 +42,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Plus, Save, Trash2, UserPlus, CheckCircle2, Clock } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, UserPlus, CheckCircle2, Clock, ChevronsUpDown, X } from 'lucide-react';
 
 interface Skill {
     id: number;
@@ -74,16 +80,28 @@ interface Props {
     levels: Level[];
 }
 
+const DAYS_OPTIONS = [
+    'Lunes',
+    'Martes',
+    'Miércoles',
+    'Jueves',
+    'Viernes',
+    'Sábado',
+    'Especial',
+];
+
 export default function Day({ day, groups: initialGroups, levels }: Props) {
     const [groups, setGroups] = useState<Group[]>(initialGroups);
     const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
     const [isCreateSwimmerModalOpen, setIsCreateSwimmerModalOpen] = useState(false);
+    const [isDaysPopoverOpen, setIsDaysPopoverOpen] = useState(false);
     const [currentGroupId, setCurrentGroupId] = useState<number | null>(null);
     const [levelSkills, setLevelSkills] = useState<Skill[]>([]);
 
     // Estados para crear grupo
     const [newGroup, setNewGroup] = useState({
         hour: '',
+        days: [] as string[],
         level_id: '',
         note: '',
     });
@@ -97,6 +115,22 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+
+    const toggleDay = (selectedDay: string) => {
+        setNewGroup(prev => ({
+            ...prev,
+            days: prev.days.includes(selectedDay)
+                ? prev.days.filter(d => d !== selectedDay)
+                : [...prev.days, selectedDay]
+        }));
+    };
+
+    const removeDay = (selectedDay: string) => {
+        setNewGroup(prev => ({
+            ...prev,
+            days: prev.days.filter(d => d !== selectedDay)
+        }));
+    };
 
     // Crear grupo
     const handleCreateGroup = async (e: React.FormEvent) => {
@@ -112,8 +146,10 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
                 body: JSON.stringify({
-                    ...newGroup,
-                    days: day,
+                    hour: newGroup.hour,
+                    days: newGroup.days.join(', '), // Convertir array a string separado por comas
+                    level_id: newGroup.level_id,
+                    note: newGroup.note,
                 }),
             });
 
@@ -125,7 +161,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
 
                 setTimeout(() => {
                     setIsCreateGroupModalOpen(false);
-                    setNewGroup({ hour: '', level_id: '', note: '' });
+                    setNewGroup({ hour: '', days: [], level_id: '', note: '' });
                     setSuccessMessage('');
                 }, 1500);
             } else {
@@ -138,9 +174,22 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
         }
     };
 
+    // Abrir modal de crear grupo (pre-seleccionar el día actual)
+    const openCreateGroupModal = () => {
+        setNewGroup({
+            hour: '',
+            days: [day], // Pre-seleccionar el día actual
+            level_id: '',
+            note: ''
+        });
+        setError('');
+        setSuccessMessage('');
+        setIsCreateGroupModalOpen(true);
+    };
+
     //Eliminar grupo
     const handleDeleteGroup = async (groupId: number) => {
-        if (confirm('Are you sure you want to delete this record?')) {
+        if (confirm('¿Estás seguro de eliminar este grupo?')) {
             const response = await fetch(`/groups/${groupId}`, {
                 method: 'DELETE',
                 headers: {
@@ -153,7 +202,6 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
             }
         }
     };
-
 
     // Abrir modal para crear swimmer
     const openCreateSwimmerModal = async (groupId: number, levelId: number) => {
@@ -326,7 +374,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                 Volver a Grupos
                             </Link>
                         </Button>
-                        <Button onClick={() => setIsCreateGroupModalOpen(true)}>
+                        <Button onClick={openCreateGroupModal}>
                             <Plus className="mr-2 h-4 w-4" />
                             Nuevo Grupo
                         </Button>
@@ -356,7 +404,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                                     {group.hour}
                                                 </CardTitle>
                                                 <CardDescription>
-                                                    Nivel: {group.level.name}
+                                                    Nivel: {group.level.name} • Días: {group.days}
                                                 </CardDescription>
                                             </div>
                                             <div className='flex items-end justify-end gap-1.5'>
@@ -376,7 +424,6 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
-
                                         </div>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
@@ -471,7 +518,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                     <DialogHeader>
                         <DialogTitle>Crear Nuevo Grupo</DialogTitle>
                         <DialogDescription>
-                            Agrega un nuevo grupo para {day}
+                            Agrega un nuevo grupo (puede tener múltiples días)
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleCreateGroup}>
@@ -484,6 +531,86 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                     </AlertDescription>
                                 </Alert>
                             )}
+
+                            {/* Selector múltiple de días */}
+                            <div className="space-y-2">
+                                <Label htmlFor="days">
+                                    Días <span className="text-destructive ml-1">*</span>
+                                </Label>
+
+                                <Popover open={isDaysPopoverOpen} onOpenChange={setIsDaysPopoverOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={isDaysPopoverOpen}
+                                            className={`w-full justify-between ${error && newGroup.days.length === 0 ? 'border-destructive' : ''}`}
+                                        >
+                                            {newGroup.days.length === 0 ? (
+                                                <span className="text-muted-foreground">Selecciona días...</span>
+                                            ) : (
+                                                <span>{newGroup.days.length} {newGroup.days.length === 1 ? 'día seleccionado' : 'días seleccionados'}</span>
+                                            )}
+                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-full p-0" align="start">
+                                        <div className="p-2 space-y-1">
+                                            {DAYS_OPTIONS.map((dayOption) => (
+                                                <div
+                                                    key={dayOption}
+                                                    className="flex items-center space-x-2 rounded-sm px-2 py-1.5 hover:bg-accent cursor-pointer"
+                                                    onClick={() => toggleDay(dayOption)}
+                                                >
+                                                    <Checkbox
+                                                        checked={newGroup.days.includes(dayOption)}
+                                                        onCheckedChange={() => toggleDay(dayOption)}
+                                                    />
+                                                    <label className="flex-1 cursor-pointer text-sm">
+                                                        {dayOption}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        {newGroup.days.length > 0 && (
+                                            <div className="border-t p-2">
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="w-full"
+                                                    onClick={() => setNewGroup({ ...newGroup, days: [] })}
+                                                >
+                                                    Limpiar selección
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </PopoverContent>
+                                </Popover>
+
+                                {/* Chips de días seleccionados */}
+                                {newGroup.days.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {newGroup.days.map((selectedDay) => (
+                                            <div
+                                                key={selectedDay}
+                                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary text-primary-foreground text-sm"
+                                            >
+                                                {selectedDay}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeDay(selectedDay)}
+                                                    className="hover:bg-primary-foreground/20 rounded-sm p-0.5"
+                                                >
+                                                    <X className="h-3 w-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
                             <div className="space-y-2">
                                 <Label htmlFor="hour">
                                     Hora <span className="text-destructive ml-1">*</span>

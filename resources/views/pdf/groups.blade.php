@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Reporte de Grupos</title>
+    <title>Reporte de Grupos - {{ $month }}</title>
     <style>
         * {
             margin: 0;
@@ -11,126 +11,242 @@
         }
 
         body {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 11px;
-            color: #333;
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            font-size: 9px;
+            color: #1a1a1a;
+            line-height: 1.5;
+            background-color: #fafafa;
         }
 
         .container {
             padding: 20px;
+            max-width: 100%;
         }
 
         .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 3px solid #2563eb;
-            padding-bottom: 15px;
+            margin-bottom: 24px;
         }
 
         .header h1 {
-            color: #1e40af;
+            color: #1a1a1a;
             font-size: 24px;
-            margin-bottom: 5px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
         }
 
         .header p {
-            color: #64748b;
-            font-size: 12px;
+            color: #6b7280;
+            font-size: 11px;
+            font-weight: 400;
         }
 
         .meta {
+            margin-bottom: 24px;
+            padding: 0;
+            font-size: 10px;
+            color: #6b7280;
             display: flex;
             justify-content: space-between;
-            margin-bottom: 20px;
-            padding: 10px;
-            background-color: #f1f5f9;
-            border-radius: 5px;
+            align-items: center;
         }
 
-        .meta-item {
+        .meta span {
+            font-weight: 400;
+        }
+
+        .group-card {
+            margin-bottom: 24px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+            page-break-inside: avoid;
+        }
+
+        .group-header {
+            padding: 16px 20px;
+            background-color: #fafafa;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .group-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .group-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1a1a;
+            letter-spacing: -0.2px;
+        }
+
+        .group-month {
             font-size: 10px;
+            color: #6b7280;
+            font-weight: 500;
         }
 
-        .meta-label {
-            font-weight: bold;
-            color: #475569;
+        .group-info {
+            display: flex;
+            gap: 8px;
+            font-size: 9px;
+            flex-wrap: wrap;
+            align-items: center;
         }
 
-        .meta-value {
-            color: #1e293b;
+        .info-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        table {
+        .badge-neutral {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+
+        .badge-subtle {
+            color: #6b7280;
+            font-weight: 400;
+        }
+
+        .group-note {
+            margin-top: 8px;
+            font-size: 9px;
+            color: #6b7280;
+            line-height: 1.4;
+        }
+
+        .calendar-table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 9px;
         }
 
-        thead {
-            background-color: #1e40af;
-            color: white;
-        }
-
-        th {
-            padding: 12px 10px;
-            text-align: left;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        td {
-            padding: 10px;
-            border-bottom: 1px solid #e2e8f0;
-            font-size: 10px;
-        }
-
-        tbody tr:nth-child(even) {
-            background-color: #f8fafc;
-        }
-
-        tbody tr:hover {
-            background-color: #f1f5f9;
-        }
-
-        .id-column {
-            width: 60px;
-            font-weight: bold;
-            color: #64748b;
-        }
-
-        .name-column {
-            font-weight: 600;
-            color: #1e293b;
-        }
-
-        .description-column {
-            color: #64748b;
-            max-width: 300px;
-        }
-
-        .date-column {
-            width: 120px;
+        .calendar-table th {
+            background-color: #fafafa;
+            padding: 10px 8px;
             text-align: center;
-            color: #475569;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 500;
+            color: #6b7280;
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .calendar-table th.label-cell {
+            background-color: #ffffff;
+            width: 80px;
+            text-align: left;
+            padding-left: 20px;
+            border-right: 1px solid #e5e7eb;
+            font-size: 9px;
+            text-transform: none;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .calendar-table td {
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid #f3f4f6;
+            background-color: #ffffff;
+        }
+
+        .calendar-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .calendar-table td.label-cell {
+            background-color: #fafafa;
+            font-weight: 500;
+            color: #374151;
+            text-align: left;
+            padding-left: 20px;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .day-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .day-name {
+            font-weight: 500;
+            color: #6b7280;
+            font-size: 8px;
+        }
+
+        .day-number {
+            font-size: 11px;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        .skill-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            font-size: 9px;
+            letter-spacing: 0.2px;
+        }
+
+        .skill-week-0 {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        .skill-week-1 {
+            background-color: #f9fafb;
+            color: #4b5563;
+            border: 1px solid #e5e7eb;
+        }
+        .skill-week-2 {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+        .skill-week-3 {
+            background-color: #f9fafb;
+            color: #4b5563;
+            border: 1px solid #e5e7eb;
+        }
+        .skill-week-4 {
+            background-color: #f3f4f6;
+            color: #374151;
         }
 
         .footer {
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 2px solid #e2e8f0;
+            margin-top: 32px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
             text-align: center;
-            color: #94a3b8;
-            font-size: 9px;
+            color: #9ca3af;
+            font-size: 8px;
+            font-weight: 400;
         }
 
         .no-data {
             text-align: center;
-            padding: 40px;
-            color: #94a3b8;
-            font-style: italic;
+            padding: 60px 20px;
+            color: #9ca3af;
+            font-size: 11px;
+        }
+
+        .divider {
+            height: 1px;
+            background-color: #e5e7eb;
+            margin: 16px 0;
         }
     </style>
 </head>
@@ -138,57 +254,90 @@
 <div class="container">
     <!-- Header -->
     <div class="header">
-        <h1>Reporte de Grupos</h1>
-        <p>Listado completo de grupos registrados</p>
+        <h1>Grupos</h1>
+        <p>{{ $month }}</p>
     </div>
 
     <!-- Meta Information -->
     <div class="meta">
-        <div class="meta-item">
-            <span class="meta-label">Fecha de generación:</span>
-            <span class="meta-value">{{ $date }}</span>
-        </div>
-        <div class="meta-item">
-            <span class="meta-label">Total de registros:</span>
-            <span class="meta-value">{{ $groups->count() }}</span>
-        </div>
+        <span>Generado el {{ $date }}</span>
+        <span>{{ count($groups) }} grupos en total</span>
     </div>
 
-    <!-- Table -->
-    @if($groups->count() > 0)
-        <table>
-            <thead>
-            <tr>
-                <th class="id-column">ID</th>
-                <th>Nombre</th>
-                <th>Descripción</th>
-                <th class="date-column">Fecha Creación</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach($groups as $group)
-                <tr>
-                    <td class="id-column">#{{ $group->hour }}</td>
-                    <td class="name-column">{{ $group->days }}</td>
-                    <td class="description-column">
-                        {{ $group->level_id ?? 'Sin nivel' }}
-                    </td>
-                    <td class="date-column">
-                       objetivo
-                    </td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
+    <div class="divider"></div>
+
+    <!-- Groups -->
+    @if(count($groups) > 0)
+        @foreach($groups as $group)
+            <div class="group-card">
+                <!-- Group Header -->
+                <div class="group-header">
+                    <div class="group-title-row">
+                        <div class="group-title">{{ $group['hour'] }}</div>
+                        <div class="group-month">{{ $group['month_name'] }}</div>
+                    </div>
+                    <div class="group-info">
+                        <span class="info-badge badge-neutral">{{ $group['days'] }}</span>
+                        <span class="info-badge badge-neutral">{{ $group['level']->name }}</span>
+                        <span class="info-badge badge-neutral">{{ $group['swimmers_count'] }} nadadores</span>
+                        <span class="badge-subtle">· Objetivos: {{ implode('-', $group['unique_skill_indexes']) }}</span>
+                    </div>
+                    @if($group['note'])
+                        <div class="group-note">{{ $group['note'] }}</div>
+                    @endif
+                </div>
+
+                <!-- Calendar Table -->
+                <table class="calendar-table">
+                    <thead>
+                    <tr>
+                        <th class="label-cell">Fecha</th>
+                        @foreach($group['dates_in_month'] as $date)
+                            <th>
+                                <div class="day-header">
+                                    <span class="day-name">{{ $date['day'] }}</span>
+                                    <span class="day-number">{{ $date['formatted'] }}</span>
+                                </div>
+                            </th>
+                        @endforeach
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td class="label-cell">Objetivos</td>
+                        @foreach($group['dates_in_month'] as $index => $date)
+                            @php
+                                // Calcular quincena (cada 2 fechas)
+                                $weeksElapsed = floor($index / 2);
+
+                                // Calcular skill indexes incrementados
+                                $adjustedIndexes = array_map(function($idx) use ($weeksElapsed) {
+                                    return $idx + $weeksElapsed;
+                                }, $group['unique_skill_indexes']);
+
+                                $skillText = implode('-', $adjustedIndexes);
+
+                                // Color según quincena
+                                $colorClass = 'skill-week-' . ($weeksElapsed % 5);
+                            @endphp
+                            <td>
+                                <span class="skill-badge {{ $colorClass }}">{{ $skillText }}</span>
+                            </td>
+                        @endforeach
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        @endforeach
     @else
         <div class="no-data">
-            No hay grupos registrados en el sistema
+            No hay grupos registrados
         </div>
     @endif
 
     <!-- Footer -->
     <div class="footer">
-        <p>Documento generado automáticamente | © {{ date('Y') }}</p>
+        <p>Generado automáticamente · {{ date('Y') }}</p>
     </div>
 </div>
 </body>

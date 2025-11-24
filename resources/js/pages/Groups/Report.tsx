@@ -18,20 +18,30 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { FileDown, Search, ArrowLeft } from 'lucide-react';
+import { FileDown, Search, ArrowLeft, Calendar, Clock, Users } from 'lucide-react';
 
-interface Skill{
+interface Skill {
     name: string;
     index: number;
 }
+
 interface Level {
     id: number;
     name: string;
 }
+
 interface Swimmer {
     name: string;
     current_skill: Skill;
 }
+
+interface DateInMonth {
+    day: string;
+    date: string;
+    day_number: number;
+    formatted: number; // Cambió de string a number
+}
+
 interface Group {
     id: number;
     hour: string;
@@ -41,6 +51,11 @@ interface Group {
     level: Level;
     swimmers: Swimmer[];
     created_at: string;
+    // Nuevos campos del backend
+    month_name: string;
+    month_year: string;
+    dates_in_month: DateInMonth[];
+    unique_skill_indexes: number[];
 }
 
 interface Props {
@@ -59,6 +74,18 @@ export default function Report({ groups: initialGroups }: Props) {
 
     const handleExportPdf = () => {
         window.location.href = '/groups/export-pdf';
+    };
+
+    // Función para calcular el skill index según la semana
+    const getSkillIndexForDate = (baseIndexes: number[], dateIndex: number): string => {
+        // Calcular en qué quincena estamos (cada 2 fechas = 1 quincena si hay 2 días por semana)
+        // Si solo hay 1 día por semana, cada fecha es una semana
+        const weeksElapsed = Math.floor(dateIndex / 4);
+
+        // Sumar weeksElapsed a cada index base
+        const adjustedIndexes = baseIndexes.map(index => index + weeksElapsed);
+
+        return adjustedIndexes.join('-');
     };
 
     return (
@@ -114,64 +141,132 @@ export default function Report({ groups: initialGroups }: Props) {
                                 </p>
                             </div>
 
-                            {/* Table */}
-                            <div className="rounded-md border">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-
-                                            <TableHead>Hora</TableHead>
-                                            <TableHead>Días</TableHead>
-                                            <TableHead>Nivel</TableHead>
-
-                                            <TableHead>Objetivos</TableHead>
-
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {filteredGroups.length > 0 ? (
-                                            filteredGroups.map((group) => (
-                                                <TableRow key={group.id}>
-
-                                                    <TableCell className="font-semibold">
-                                                        {group.hour}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {group.days}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-primary/10 text-primary">
-                                                            {group.level?.name}
-                                                        </span>
-                                                    </TableCell>
-
-
-                                                    <TableCell>
-                                                        {[...new Set(
-                                                        group.swimmers.map((swimmer) => swimmer.current_skill.index + 1)
-                                                        )].join('-')}
-
-                                                    </TableCell>
-
-                                                </TableRow>
-                                            ))
-                                        ) : (
-                                            <TableRow>
-                                                <TableCell colSpan={6} className="h-24 text-center">
-                                                    <div className="flex flex-col items-center justify-center text-muted-foreground">
-                                                        <p className="text-lg font-medium">No se encontraron resultados</p>
-                                                        <p className="text-sm">
-                                                            {searchTerm
-                                                                ? 'Intenta con otro término de búsqueda'
-                                                                : 'No hay grupos registrados aún'
-                                                            }
-                                                        </p>
+                            {/* Groups with Calendar */}
+                            <div className="space-y-6">
+                                {filteredGroups.length > 0 ? (
+                                    filteredGroups.map((group) => (
+                                        <Card key={group.id} className="overflow-hidden">
+                                            {/* Group Header */}
+                                            <CardHeader className="bg-transparent">
+                                                <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                                                    <div className="space-y-2">
+                                                        <CardTitle className="flex items-center gap-2 text-xl">
+                                                            <Clock className="h-5 w-5 text-primary" />
+                                                            {group.hour}
+                                                        </CardTitle>
+                                                        <div className="flex flex-wrap gap-2 text-sm">
+                                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary/10 text-primary font-medium">
+                                                                <Calendar className="h-3.5 w-3.5" />
+                                                                {group.days}
+                                                            </span>
+                                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-blue-100 text-blue-700 font-medium">
+                                                                {group.level?.name}
+                                                            </span>
+                                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-purple-100 text-purple-700 font-medium">
+                                                                <Users className="h-3.5 w-3.5" />
+                                                                {group.swimmers.length} nadadores
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
+                                                    <div className="text-sm text-muted-foreground">
+                                                        <div className="font-semibold text-base text-foreground mb-1">
+                                                            {group.month_name}
+                                                        </div>
+                                                        <div className="text-xs">
+                                                            Objetivos base: {group.unique_skill_indexes.join('-')}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {group.note && (
+                                                    <CardDescription className="mt-3 text-sm">
+                                                        <span className="font-semibold">Notas:</span> {group.note}
+                                                    </CardDescription>
+                                                )}
+                                            </CardHeader>
+
+                                            {/* Calendar Table */}
+                                            <CardContent className="p-0">
+                                                <div className="overflow-x-auto">
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                <TableHead className="w-32 bg-transparent">
+                                                                    Día
+                                                                </TableHead>
+                                                                {group.dates_in_month.map((date, index) => (
+                                                                    <TableHead
+                                                                        key={index}
+                                                                        className="text-center min-w-[80px] bg-transparent"
+                                                                    >
+                                                                        <div className="flex flex-col">
+                                                                            <span className="font-semibold">
+                                                                                {date.day}
+                                                                            </span>
+                                                                            <span className="text-xs text-muted-foreground">
+                                                                                {date.formatted}
+                                                                            </span>
+                                                                        </div>
+                                                                    </TableHead>
+                                                                ))}
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            <TableRow>
+                                                                <TableCell className="font-semibold bg-transparent">
+                                                                    Objetivos
+                                                                </TableCell>
+                                                                {group.dates_in_month.map((date, index) => {
+                                                                    const skillIndexes = getSkillIndexForDate(
+                                                                        group.unique_skill_indexes,
+                                                                        index
+                                                                    );
+
+                                                                    // Determinar el color según la quincena
+                                                                    const weekNumber = Math.floor(index / 2);
+                                                                    const colors = [
+                                                                        'bg-primary/10 text-primary',
+                                                                        'bg-green-100 text-green-700',
+                                                                        'bg-blue-100 text-blue-700',
+                                                                        'bg-purple-100 text-purple-700',
+                                                                        'bg-orange-100 text-orange-700',
+                                                                    ];
+                                                                    const colorClass = colors[weekNumber % colors.length];
+
+                                                                    return (
+                                                                        <TableCell
+                                                                            key={index}
+                                                                            className="text-center"
+                                                                        >
+                                                                            <div className={`inline-flex items-center justify-center min-w-[60px] px-3 py-1.5 rounded-md ${colorClass} font-semibold text-sm`}>
+                                                                                {skillIndexes}
+                                                                            </div>
+                                                                        </TableCell>
+                                                                    );
+                                                                })}
+                                                            </TableRow>
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    ))
+                                ) : (
+                                    <Card>
+                                        <CardContent className="py-12">
+                                            <div className="flex flex-col items-center justify-center text-muted-foreground">
+                                                <Calendar className="h-12 w-12 mb-4" />
+                                                <p className="text-lg font-medium">No se encontraron resultados</p>
+                                                <p className="text-sm">
+                                                    {searchTerm
+                                                        ? 'Intenta con otro término de búsqueda'
+                                                        : 'No hay grupos registrados aún'
+                                                    }
+                                                </p>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
