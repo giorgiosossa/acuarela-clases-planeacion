@@ -39,7 +39,7 @@ interface DateInMonth {
     day: string;
     date: string;
     day_number: number;
-    formatted: number; // Cambió de string a number
+    formatted: number;
 }
 
 interface Group {
@@ -51,7 +51,6 @@ interface Group {
     level: Level;
     swimmers: Swimmer[];
     created_at: string;
-    // Nuevos campos del backend
     month_name: string;
     month_year: string;
     dates_in_month: DateInMonth[];
@@ -151,30 +150,25 @@ export default function Report({ groups: initialGroups }: Props) {
                                                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                                                     <div className="space-y-2">
                                                         <CardTitle className="flex items-center gap-2 text-xl">
-                                                            <Clock className="h-5 w-5 text-primary" />
-                                                            {group.hour}
+                                                            <Calendar className="h-5 w-5 text-primary" />
+                                                            {group.days}
                                                         </CardTitle>
                                                         <div className="flex flex-wrap gap-2 text-sm">
                                                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary/10 text-primary font-medium">
-                                                                <Calendar className="h-3.5 w-3.5" />
-                                                                {group.days}
+                                                                <Clock className="h-3.5 w-3.5" />
+                                                                {group.hour}
                                                             </span>
-                                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-blue-100 text-blue-700 font-medium">
+                                                            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-primary/10 text-primary font-medium">
                                                                 {group.level?.name}
                                                             </span>
-                                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-purple-100 text-purple-700 font-medium">
-                                                                <Users className="h-3.5 w-3.5" />
-                                                                {group.swimmers.length} nadadores
-                                                            </span>
+
                                                         </div>
                                                     </div>
                                                     <div className="text-sm text-muted-foreground">
                                                         <div className="font-semibold text-base text-foreground mb-1">
                                                             {group.month_name}
                                                         </div>
-                                                        <div className="text-xs">
-                                                            Objetivos base: {group.unique_skill_indexes.join('-')}
-                                                        </div>
+
                                                     </div>
                                                 </div>
 
@@ -204,7 +198,7 @@ export default function Report({ groups: initialGroups }: Props) {
                                                                                 {date.day}
                                                                             </span>
                                                                             <span className="text-xs text-muted-foreground">
-                                                                                {date.formatted}
+                                                                                {date.day_number}
                                                                             </span>
                                                                         </div>
                                                                     </TableHead>
@@ -225,11 +219,11 @@ export default function Report({ groups: initialGroups }: Props) {
                                                                     // Determinar el color según la quincena
                                                                     const weekNumber = Math.floor(index / 2);
                                                                     const colors = [
-                                                                        'bg-primary/10 text-primary',
-                                                                        'bg-green-100 text-green-700',
+                                                                        'bg-sky-100 text-sky-700',
                                                                         'bg-blue-100 text-blue-700',
-                                                                        'bg-purple-100 text-purple-700',
-                                                                        'bg-orange-100 text-orange-700',
+                                                                        'bg-indigo-100 text-indigo-700',
+                                                                        'bg-cyan-100 text-cyan-700',
+                                                                        'bg-blue-200 text-blue-800',
                                                                     ];
                                                                     const colorClass = colors[weekNumber % colors.length];
 

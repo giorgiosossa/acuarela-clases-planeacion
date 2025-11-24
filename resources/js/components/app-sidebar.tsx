@@ -15,42 +15,48 @@ import levels  from "@/routes/levels" ;
 import groups from '@/routes/groups';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { BookOpen, Folder, LayoutGrid, Calendar, PersonStanding} from 'lucide-react';
 import AppLogo from './app-logo';
-import { day } from '@/routes/groups';
+
 
 const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
+    // {
+    //     title: 'Dashboard',
+    //     href: dashboard(),
+    //     icon: LayoutGrid,
+    // },
 
     {
         title: 'Groups',
         href: groups.index(),
-        icon: LayoutGrid,
+        icon: PersonStanding,
+    },
+
+    {
+        title: 'Planeacion',
+        href: groups.report(),
+        icon: Calendar,
     },
 
     {
         title: 'Levels',
         href: levels.index(),
-        icon: LayoutGrid,
+        icon: Folder,
     },
 
 ];
 
 const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
-    },
+    // {
+    //     title: 'Repository',
+    //     href: 'https://github.com/laravel/react-starter-kit',
+    //     icon: Folder,
+    // },
+    // {
+    //     title: 'Documentation',
+    //     href: 'https://laravel.com/docs/starter-kits#react',
+    //     icon: BookOpen,
+    // },
 ];
 
 export function AppSidebar() {

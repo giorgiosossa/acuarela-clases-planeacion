@@ -366,8 +366,8 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
             <Head title={`Grupos - ${day}`} />
 
             <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <div className="mb-6 flex items-center justify-between">
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"> {/* Ajuste: agregado 'px-4' para móvil */}
+                    <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"> {/* Ajuste: flex-col en móvil */}
                         <Button asChild variant="ghost">
                             <Link href="/groups">
                                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -397,7 +397,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                             return (
                                 <Card key={group.id}>
                                     <CardHeader>
-                                        <div className="flex items-start justify-between">
+                                        <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-1.5"> {/* Ajuste CLAVE: flex-col en móvil, gap-4 */}
                                             <div className="space-y-1">
                                                 <CardTitle className="flex items-center gap-2">
                                                     <Clock className="h-5 w-5 text-primary" />
@@ -407,9 +407,10 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                                     Nivel: {group.level.name} • Días: {group.days}
                                                 </CardDescription>
                                             </div>
-                                            <div className='flex items-end justify-end gap-1.5'>
+                                            <div className='flex flex-col sm:flex-row items-start justify-end gap-2 sm:gap-1.5'> {/* Ajuste CLAVE: flex-col para apilar botones en móvil */}
                                                 <Button
                                                     size="sm"
+                                                    className="w-full sm:w-auto" // Ajuste: ancho completo en móvil
                                                     onClick={() => openCreateSwimmerModal(group.id, group.level_id)}
                                                 >
                                                     <UserPlus className="mr-2 h-4 w-4" />
@@ -419,9 +420,11 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                                 <Button
                                                     variant="destructive"
                                                     size="sm"
+                                                    className="w-full sm:w-auto" // Ajuste: ancho completo en móvil
                                                     onClick={() => handleDeleteGroup(group.id)}
                                                 >
-                                                    <Trash2 className="h-4 w-4" />
+                                                    <Trash2 className="h-4 w-4 sm:mr-0" /> {/* Ajuste: remover mr-2 en móvil */}
+                                                    <span className="sm:hidden ml-2">Eliminar Grupo</span> {/* Texto visible solo en móvil para el botón de icono */}
                                                 </Button>
                                             </div>
                                         </div>
@@ -446,59 +449,61 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
 
                                         {/* Tabla de nadadores */}
                                         {group.swimmers.length > 0 ? (
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        <TableHead>Nadador</TableHead>
-                                                        <TableHead>Habilidad Actual</TableHead>
-                                                        <TableHead className="text-right">Acciones</TableHead>
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {group.swimmers.map((swimmer) => (
-                                                        <TableRow key={swimmer.id}>
-                                                            <TableCell className="font-medium">
-                                                                {swimmer.name}
-                                                            </TableCell>
-                                                            <TableCell>
-                                                                <Select
-                                                                    value={swimmer.skill_id?.toString() ?? ''}
-                                                                    onValueChange={(value) =>
-                                                                        handleUpdateSwimmerSkill(
-                                                                            swimmer.id,
-                                                                            group.id,
-                                                                            parseInt(value)
-                                                                        )
-                                                                    }
-                                                                >
-                                                                    <SelectTrigger>
-                                                                        <SelectValue />
-                                                                    </SelectTrigger>
-                                                                    <SelectContent>
-                                                                        {(groupSkills[group.id] || []).map((skill) => (
-                                                                            <SelectItem
-                                                                                key={skill.id}
-                                                                                value={skill.id.toString()}
-                                                                            >
-                                                                                {skill.name}
-                                                                            </SelectItem>
-                                                                        ))}
-                                                                    </SelectContent>
-                                                                </Select>
-                                                            </TableCell>
-                                                            <TableCell className="text-right">
-                                                                <Button
-                                                                    variant="destructive"
-                                                                    size="sm"
-                                                                    onClick={() => handleDeleteSwimmer(swimmer.id, group.id)}
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
-                                                            </TableCell>
+                                            <div className="overflow-x-auto"> {/* Ajuste CLAVE: Contenedor para scroll horizontal */}
+                                                <Table className="min-w-[500px] sm:min-w-full"> {/* Ajuste: ancho mínimo para evitar desbordamiento */}
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead>Nadador</TableHead>
+                                                            <TableHead className="min-w-[150px]">Habilidad Actual</TableHead>
+                                                            <TableHead className="text-right">Acciones</TableHead>
                                                         </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {group.swimmers.map((swimmer) => (
+                                                            <TableRow key={swimmer.id}>
+                                                                <TableCell className="font-medium">
+                                                                    {swimmer.name}
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <Select
+                                                                        value={swimmer.skill_id?.toString() ?? ''}
+                                                                        onValueChange={(value) =>
+                                                                            handleUpdateSwimmerSkill(
+                                                                                swimmer.id,
+                                                                                group.id,
+                                                                                parseInt(value)
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        <SelectTrigger>
+                                                                            <SelectValue />
+                                                                        </SelectTrigger>
+                                                                        <SelectContent>
+                                                                            {(groupSkills[group.id] || []).map((skill) => (
+                                                                                <SelectItem
+                                                                                    key={skill.id}
+                                                                                    value={skill.id.toString()}
+                                                                                >
+                                                                                    {skill.name}
+                                                                                </SelectItem>
+                                                                            ))}
+                                                                        </SelectContent>
+                                                                    </Select>
+                                                                </TableCell>
+                                                                <TableCell className="text-right">
+                                                                    <Button
+                                                                        variant="destructive"
+                                                                        size="sm"
+                                                                        onClick={() => handleDeleteSwimmer(swimmer.id, group.id)}
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
                                         ) : (
                                             <p className="text-center text-muted-foreground py-4">
                                                 No hay nadadores en este grupo
@@ -674,7 +679,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                 </DialogContent>
             </Dialog>
 
-            {/* Modal Crear Swimmer */}
+            {/* Modal Crear Swimmer (Asegúrate de que este también sea responsivo) */}
             <Dialog open={isCreateSwimmerModalOpen} onOpenChange={setIsCreateSwimmerModalOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -693,30 +698,31 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                     </AlertDescription>
                                 </Alert>
                             )}
+
                             <div className="space-y-2">
-                                <Label htmlFor="swimmer_name">
+                                <Label htmlFor="swimmer-name">
                                     Nombre <span className="text-destructive ml-1">*</span>
                                 </Label>
                                 <Input
-                                    id="swimmer_name"
+                                    id="swimmer-name"
                                     type="text"
                                     value={newSwimmer.name}
                                     onChange={(e) => setNewSwimmer({ ...newSwimmer, name: e.target.value })}
-                                    placeholder="Nombre del nadador"
-                                    className={error ? 'border-destructive' : ''}
+                                    placeholder="Nombre completo"
                                     autoFocus
                                 />
                             </div>
+
                             <div className="space-y-2">
                                 <Label htmlFor="skill_id">
-                                    Habilidad Actual <span className="text-destructive ml-1">*</span>
+                                    Habilidad Inicial <span className="text-destructive ml-1">*</span>
                                 </Label>
                                 <Select
                                     value={newSwimmer.skill_id}
                                     onValueChange={(value) => setNewSwimmer({ ...newSwimmer, skill_id: value })}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Selecciona una habilidad" />
+                                        <SelectValue placeholder="Selecciona la habilidad inicial" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {levelSkills.map((skill) => (
