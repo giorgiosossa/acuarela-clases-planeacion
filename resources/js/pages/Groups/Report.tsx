@@ -172,11 +172,7 @@ export default function Report({ groups: initialGroups }: Props) {
                                                     </div>
                                                 </div>
 
-                                                {group.note && (
-                                                    <CardDescription className="mt-3 text-sm">
-                                                        <span className="font-semibold">Notas:</span> {group.note}
-                                                    </CardDescription>
-                                                )}
+
                                             </CardHeader>
 
                                             {/* Calendar Table */}

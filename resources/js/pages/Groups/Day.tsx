@@ -42,7 +42,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Plus, Trash2, UserPlus, CheckCircle2, Clock, ChevronsUpDown, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, UserPlus, CheckCircle2, Clock, ChevronsUpDown, X, GripVertical } from 'lucide-react';
 
 interface Skill {
     id: number;
@@ -97,6 +97,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
     const [isDaysPopoverOpen, setIsDaysPopoverOpen] = useState(false);
     const [currentGroupId, setCurrentGroupId] = useState<number | null>(null);
     const [levelSkills, setLevelSkills] = useState<Skill[]>([]);
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
     // Estados para crear grupo
     const [newGroup, setNewGroup] = useState({
@@ -115,6 +116,32 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
+
+    // Funciones de Drag and Drop
+    const handleDragStart = (e: React.DragEvent, index: number) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleDragOver = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        if (draggedIndex === null || draggedIndex === index) return;
+
+        const newGroups = [...groups];
+        const draggedItem = newGroups[draggedIndex];
+
+        newGroups.splice(draggedIndex, 1);
+        newGroups.splice(index, 0, draggedItem);
+
+        setGroups(newGroups);
+        setDraggedIndex(index);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+    };
 
     const toggleDay = (selectedDay: string) => {
         setNewGroup(prev => ({
@@ -147,7 +174,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                 },
                 body: JSON.stringify({
                     hour: newGroup.hour,
-                    days: newGroup.days.join(', '), // Convertir array a string separado por comas
+                    days: newGroup.days.join(', '),
                     level_id: newGroup.level_id,
                     note: newGroup.note,
                 }),
@@ -174,11 +201,11 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
         }
     };
 
-    // Abrir modal de crear grupo (pre-seleccionar el día actual)
+    // Abrir modal de crear grupo
     const openCreateGroupModal = () => {
         setNewGroup({
             hour: '',
-            days: [day], // Pre-seleccionar el día actual
+            days: [day],
             level_id: '',
             note: ''
         });
@@ -210,7 +237,6 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
         setError('');
         setSuccessMessage('');
 
-        // Cargar skills del level
         try {
             const response = await fetch(`/groups/level/${levelId}/skills`);
             const result = await response.json();
@@ -247,7 +273,6 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
             const result = await response.json();
 
             if (response.ok && result.success) {
-                // Actualizar el grupo con el nuevo swimmer
                 setGroups(groups.map(g =>
                     g.id === currentGroupId
                         ? { ...g, swimmers: [...g.swimmers, result.swimmer] }
@@ -303,7 +328,6 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
             const result = await response.json();
 
             if (response.ok && result.success) {
-                // Actualizar el swimmer en el estado
                 setGroups(groups.map(g =>
                     g.id === groupId
                         ? {
@@ -348,7 +372,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
     const [groupSkills, setGroupSkills] = useState<Record<number, Skill[]>>({});
 
     const loadGroupSkills = async (levelId: number, groupId: number) => {
-        if (groupSkills[groupId]) return; // Ya cargadas
+        if (groupSkills[groupId]) return;
 
         try {
             const response = await fetch(`/groups/level/${levelId}/skills`);
@@ -366,8 +390,8 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
             <Head title={`Grupos - ${day}`} />
 
             <div className="py-12">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"> {/* Ajuste: agregado 'px-4' para móvil */}
-                    <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"> {/* Ajuste: flex-col en móvil */}
+                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                    <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <Button asChild variant="ghost">
                             <Link href="/groups">
                                 <ArrowLeft className="mr-2 h-4 w-4" />
@@ -388,129 +412,138 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                     </div>
 
                     <div className="space-y-6">
-                        {groups.map((group) => {
-                            // Cargar skills al renderizar el grupo
+                        {groups.map((group, index) => {
                             if (!groupSkills[group.id]) {
                                 loadGroupSkills(group.level_id, group.id);
                             }
 
                             return (
-                                <Card key={group.id}>
-                                    <CardHeader>
-                                        <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-1.5"> {/* Ajuste CLAVE: flex-col en móvil, gap-4 */}
-                                            <div className="space-y-1">
-                                                <CardTitle className="flex items-center gap-2">
-                                                    <Clock className="h-5 w-5 text-primary" />
-                                                    {group.hour}
-                                                </CardTitle>
-                                                <CardDescription>
-                                                    Nivel: {group.level.name} • Días: {group.days}
-                                                </CardDescription>
-                                            </div>
-                                            <div className='flex flex-col sm:flex-row items-start justify-end gap-2 sm:gap-1.5'> {/* Ajuste CLAVE: flex-col para apilar botones en móvil */}
-                                                <Button
-                                                    size="sm"
-                                                    className="w-full sm:w-auto" // Ajuste: ancho completo en móvil
-                                                    onClick={() => openCreateSwimmerModal(group.id, group.level_id)}
-                                                >
-                                                    <UserPlus className="mr-2 h-4 w-4" />
-                                                    Agregar Nadador
-                                                </Button>
+                                <div
+                                    key={group.id}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, index)}
+                                    onDragOver={(e) => handleDragOver(e, index)}
+                                    onDragEnd={handleDragEnd}
+                                    className={`transition-opacity ${draggedIndex === index ? 'opacity-50' : 'opacity-100'}`}
+                                >
+                                    <Card className="cursor-move hover:shadow-md transition-shadow">
+                                        <CardHeader>
+                                            <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-1.5">
+                                                <div className="flex items-start gap-2 flex-1">
+                                                    <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                                    <div className="space-y-1">
+                                                        <CardTitle className="flex items-center gap-2">
+                                                            <Clock className="h-5 w-5 text-primary" />
+                                                            {group.hour}
+                                                        </CardTitle>
+                                                        <CardDescription>
+                                                            Nivel: {group.level.name} • Días: {group.days}
+                                                        </CardDescription>
+                                                    </div>
+                                                </div>
+                                                <div className='flex flex-col sm:flex-row items-start justify-end gap-2 sm:gap-1.5'>
+                                                    <Button
+                                                        size="sm"
+                                                        className="w-full sm:w-auto"
+                                                        onClick={() => openCreateSwimmerModal(group.id, group.level_id)}
+                                                    >
+                                                        <UserPlus className="mr-2 h-4 w-4" />
+                                                        Agregar Nadador
+                                                    </Button>
 
-                                                <Button
-                                                    variant="destructive"
-                                                    size="sm"
-                                                    className="w-full sm:w-auto" // Ajuste: ancho completo en móvil
-                                                    onClick={() => handleDeleteGroup(group.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4 sm:mr-0" /> {/* Ajuste: remover mr-2 en móvil */}
-                                                    <span className="sm:hidden ml-2">Eliminar Grupo</span> {/* Texto visible solo en móvil para el botón de icono */}
-                                                </Button>
+                                                    <Button
+                                                        variant="destructive"
+                                                        size="sm"
+                                                        className="w-full sm:w-auto"
+                                                        onClick={() => handleDeleteGroup(group.id)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4 sm:mr-0" />
+                                                        <span className="sm:hidden ml-2">Eliminar Grupo</span>
+                                                    </Button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        {/* Notas */}
-                                        <div>
-                                            <Label>Notas</Label>
-                                            <Textarea
-                                                value={group.note}
-                                                onChange={(e) => {
-                                                    const newNote = e.target.value;
-                                                    setGroups(groups.map(g =>
-                                                        g.id === group.id ? { ...g, note: newNote } : g
-                                                    ));
-                                                }}
-                                                onBlur={(e) => handleUpdateNote(group.id, e.target.value)}
-                                                placeholder="Agregar notas del grupo..."
-                                                rows={2}
-                                            />
-                                        </div>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            <div>
+                                                <Label className="mb-2">Notas</Label>
+                                                <Textarea
+                                                    value={group.note}
+                                                    onChange={(e) => {
+                                                        const newNote = e.target.value;
+                                                        setGroups(groups.map(g =>
+                                                            g.id === group.id ? { ...g, note: newNote } : g
+                                                        ));
+                                                    }}
+                                                    onBlur={(e) => handleUpdateNote(group.id, e.target.value)}
+                                                    placeholder="Agregar notas del grupo..."
+                                                    rows={2}
+                                                />
+                                            </div>
 
-                                        {/* Tabla de nadadores */}
-                                        {group.swimmers.length > 0 ? (
-                                            <div className="overflow-x-auto"> {/* Ajuste CLAVE: Contenedor para scroll horizontal */}
-                                                <Table className="min-w-[500px] sm:min-w-full"> {/* Ajuste: ancho mínimo para evitar desbordamiento */}
-                                                    <TableHeader>
-                                                        <TableRow>
-                                                            <TableHead>Nadador</TableHead>
-                                                            <TableHead className="min-w-[150px]">Habilidad Actual</TableHead>
-                                                            <TableHead className="text-right">Acciones</TableHead>
-                                                        </TableRow>
-                                                    </TableHeader>
-                                                    <TableBody>
-                                                        {group.swimmers.map((swimmer) => (
-                                                            <TableRow key={swimmer.id}>
-                                                                <TableCell className="font-medium">
-                                                                    {swimmer.name}
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <Select
-                                                                        value={swimmer.skill_id?.toString() ?? ''}
-                                                                        onValueChange={(value) =>
-                                                                            handleUpdateSwimmerSkill(
-                                                                                swimmer.id,
-                                                                                group.id,
-                                                                                parseInt(value)
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        <SelectTrigger>
-                                                                            <SelectValue />
-                                                                        </SelectTrigger>
-                                                                        <SelectContent>
-                                                                            {(groupSkills[group.id] || []).map((skill) => (
-                                                                                <SelectItem
-                                                                                    key={skill.id}
-                                                                                    value={skill.id.toString()}
-                                                                                >
-                                                                                    {skill.name}
-                                                                                </SelectItem>
-                                                                            ))}
-                                                                        </SelectContent>
-                                                                    </Select>
-                                                                </TableCell>
-                                                                <TableCell className="text-right">
-                                                                    <Button
-                                                                        variant="destructive"
-                                                                        size="sm"
-                                                                        onClick={() => handleDeleteSwimmer(swimmer.id, group.id)}
-                                                                    >
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    </Button>
-                                                                </TableCell>
+                                            {group.swimmers.length > 0 ? (
+                                                <div className="overflow-x-auto">
+                                                    <Table className="min-w-[500px] sm:min-w-full">
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                <TableHead>Nadador</TableHead>
+                                                                <TableHead className="min-w-[150px]">Habilidad Actual</TableHead>
+                                                                <TableHead className="text-right">Acciones</TableHead>
                                                             </TableRow>
-                                                        ))}
-                                                    </TableBody>
-                                                </Table>
-                                            </div>
-                                        ) : (
-                                            <p className="text-center text-muted-foreground py-4">
-                                                No hay nadadores en este grupo
-                                            </p>
-                                        )}
-                                    </CardContent>
-                                </Card>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {group.swimmers.map((swimmer) => (
+                                                                <TableRow key={swimmer.id}>
+                                                                    <TableCell className="font-medium">
+                                                                        {swimmer.name}
+                                                                    </TableCell>
+                                                                    <TableCell>
+                                                                        <Select
+                                                                            value={swimmer.skill_id?.toString() ?? ''}
+                                                                            onValueChange={(value) =>
+                                                                                handleUpdateSwimmerSkill(
+                                                                                    swimmer.id,
+                                                                                    group.id,
+                                                                                    parseInt(value)
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            <SelectTrigger>
+                                                                                <SelectValue />
+                                                                            </SelectTrigger>
+                                                                            <SelectContent>
+                                                                                {(groupSkills[group.id] || []).map((skill) => (
+                                                                                    <SelectItem
+                                                                                        key={skill.id}
+                                                                                        value={skill.id.toString()}
+                                                                                    >
+                                                                                        {skill.index + 1 }. {skill.name}
+                                                                                    </SelectItem>
+                                                                                ))}
+                                                                            </SelectContent>
+                                                                        </Select>
+                                                                    </TableCell>
+                                                                    <TableCell className="text-right">
+                                                                        <Button
+                                                                            variant="destructive"
+                                                                            size="sm"
+                                                                            onClick={() => handleDeleteSwimmer(swimmer.id, group.id)}
+                                                                        >
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        </Button>
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ))}
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            ) : (
+                                                <p className="text-center text-muted-foreground py-4">
+                                                    No hay nadadores en este grupo
+                                                </p>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                </div>
                             );
                         })}
                     </div>
@@ -537,7 +570,6 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                 </Alert>
                             )}
 
-                            {/* Selector múltiple de días */}
                             <div className="space-y-2">
                                 <Label htmlFor="days">
                                     Días <span className="text-destructive ml-1">*</span>
@@ -594,7 +626,6 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                     </PopoverContent>
                                 </Popover>
 
-                                {/* Chips de días seleccionados */}
                                 {newGroup.days.length > 0 && (
                                     <div className="flex flex-wrap gap-2">
                                         {newGroup.days.map((selectedDay) => (
@@ -679,7 +710,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                 </DialogContent>
             </Dialog>
 
-            {/* Modal Crear Swimmer (Asegúrate de que este también sea responsivo) */}
+            {/* Modal Crear Swimmer */}
             <Dialog open={isCreateSwimmerModalOpen} onOpenChange={setIsCreateSwimmerModalOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -727,7 +758,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                     <SelectContent>
                                         {levelSkills.map((skill) => (
                                             <SelectItem key={skill.id} value={skill.id.toString()}>
-                                                {skill.name}
+                                                {skill.index + 1}. {skill.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
