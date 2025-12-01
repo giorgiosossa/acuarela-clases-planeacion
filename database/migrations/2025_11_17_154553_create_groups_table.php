@@ -16,7 +16,7 @@ return new class extends Migration
             $table->time('hour_start');
             $table->string('days');
             $table->text('note')->nullable();
-            $table->foreignId('level_id')->constrained();
+            $table->foreignId('level_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

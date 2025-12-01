@@ -174,22 +174,24 @@ class GroupController extends Controller
                 ->unique()
                 ->sort()
                 ->values()
-                ->map(fn($index) => $index + 1) // Sumar 1 para mostrar desde 1 en vez de 0
                 ->toArray();
+
+
+            $totalSkillsInLevel = Skill::where('level_id', $group->level_id)->max('index') ?? 0;
 
             return [
                 'id' => $group->id,
-                'hour' => $group->hour,
+                'hour_start' => $group->hour_start,
                 'days' => $group->days,
                 'note' => $group->note,
                 'level' => $group->level,
                 'swimmers' => $group->swimmers,
                 'created_at' => $group->created_at,
-                // Información adicional del calendario
                 'month_name' => $currentMonth->locale('es')->translatedFormat('F Y'),
                 'month_year' => $currentMonth->format('Y-m'),
                 'dates_in_month' => $datesInMonth,
                 'unique_skill_indexes' => $uniqueSkillIndexes,
+                'max_skill_index' => $totalSkillsInLevel, // NUEVO
             ];
         });
 
@@ -198,7 +200,7 @@ class GroupController extends Controller
         ]);
     }
 
-    // Método para exportar PDF
+// Método para exportar PDF
     public function exportPdf()
     {
         // Orden de días para ordenar los grupos
@@ -254,24 +256,30 @@ class GroupController extends Controller
                 }
             }
 
+            // Obtener los índices únicos de skills de los nadadores
             $uniqueSkillIndexes = $group->swimmers
                 ->pluck('currentSkill.index')
                 ->unique()
                 ->sort()
                 ->values()
-                ->map(fn($index) => $index + 1)
                 ->toArray();
+
+
+            $totalSkillsInLevel = Skill::where('level_id', $group->level_id)->max('index') ?? 0;
 
             return [
                 'id' => $group->id,
-                'hour' => $group->hour,
+                'hour_start' => $group->hour_start,
                 'days' => $group->days,
                 'note' => $group->note,
                 'level' => $group->level,
-                'swimmers_count' => $group->swimmers->count(),
+                'swimmers' => $group->swimmers,
+                'created_at' => $group->created_at,
                 'month_name' => $currentMonth->locale('es')->translatedFormat('F Y'),
+                'month_year' => $currentMonth->format('Y-m'),
                 'dates_in_month' => $datesInMonth,
                 'unique_skill_indexes' => $uniqueSkillIndexes,
+                'max_skill_index' => $totalSkillsInLevel, // NUEVO
             ];
         });
 

@@ -44,7 +44,7 @@ interface DateInMonth {
 
 interface Group {
     id: number;
-    hour: string;
+    hour_start: string;
     days: string;
     note: string;
     level_id: number;
@@ -55,8 +55,8 @@ interface Group {
     month_year: string;
     dates_in_month: DateInMonth[];
     unique_skill_indexes: number[];
+    max_skill_index: number;
 }
-
 interface Props {
     groups: Group[];
 }
@@ -64,8 +64,16 @@ interface Props {
 export default function Report({ groups: initialGroups }: Props) {
     const [searchTerm, setSearchTerm] = useState('');
 
+    const formatTime = (time: string) => {
+        const [hours, minutes] = time.split(':');
+        const hour = parseInt(hours);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+        return `${displayHour}:${minutes} ${ampm}`;
+    };
+
     const filteredGroups = initialGroups.filter(group =>
-        group.hour?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        group.hour_start?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         group.days?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         group.level?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         group.note?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -76,15 +84,27 @@ export default function Report({ groups: initialGroups }: Props) {
     };
 
     // Función para calcular el skill index según la semana
-    const getSkillIndexForDate = (baseIndexes: number[], dateIndex: number): string => {
-        // Calcular en qué quincena estamos (cada 2 fechas = 1 quincena si hay 2 días por semana)
-        // Si solo hay 1 día por semana, cada fecha es una semana
+    const getSkillIndexForDate = (baseIndexes: number[], dateIndex: number, maxSkillIndex: number): string => {
+        // Calcular en qué quincena estamos
         const weeksElapsed = Math.floor(dateIndex / 4);
 
         // Sumar weeksElapsed a cada index base
         const adjustedIndexes = baseIndexes.map(index => index + weeksElapsed);
 
-        return adjustedIndexes.join('-');
+        // Verificar si algún índice supera el máximo
+        const validIndexes = adjustedIndexes.filter(index => index <= maxSkillIndex);
+
+        // Si no hay índices válidos, mostrar EV
+        if (validIndexes.length === 0) {
+            return 'EV';
+        }
+
+        // Si hay algunos índices válidos, mostrarlos
+        // Si faltan algunos, agregar EV al final
+        const result = validIndexes.join('-');
+        const hasExceeded = adjustedIndexes.length > validIndexes.length;
+
+        return hasExceeded ? `${result}-EV` : result;
     };
 
     return (
@@ -155,8 +175,8 @@ export default function Report({ groups: initialGroups }: Props) {
                                                         </CardTitle>
                                                         <div className="flex flex-wrap gap-2 text-sm">
                                                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary/10 text-primary font-medium">
-                                                                <Clock className="h-3.5 w-3.5" />
-                                                                {group.hour}
+                                                                    <Clock className="h-3.5 w-3.5" />
+                                                                    {formatTime(group.hour_start)}
                                                             </span>
                                                             <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-primary/10 text-primary font-medium">
                                                                 {group.level?.name}
@@ -209,7 +229,8 @@ export default function Report({ groups: initialGroups }: Props) {
                                                                 {group.dates_in_month.map((date, index) => {
                                                                     const skillIndexes = getSkillIndexForDate(
                                                                         group.unique_skill_indexes,
-                                                                        index
+                                                                        index,
+                                                                        group.max_skill_index
                                                                     );
 
                                                                     // Determinar el color según la quincena
