@@ -10,7 +10,7 @@ class Group extends Model
     use HasFactory;
 
     protected $fillable = [
-        'hour',
+        'hour_start',
         'level_id',
         'days',
         'note'

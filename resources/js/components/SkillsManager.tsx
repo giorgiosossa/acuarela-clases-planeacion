@@ -82,7 +82,7 @@ function SortableSkillItem({ skill, onEdit, onDelete }: {
             >
                 <GripVertical className="h-5 w-5 text-muted-foreground" />
             </button>
-            <span className="flex font-medium w-1/3">{skill.index + 1} </span>
+            <span className="flex font-medium w-1/3">{skill.index} </span>
             <span className="flex font-medium w-2/3">{skill.name} </span>
 
 

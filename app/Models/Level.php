@@ -36,7 +36,6 @@ class Level extends Model
         static::deleting(function ($level) {
             // Al eliminar un level, también eliminar todas sus skills y subskills
             $level->skills()->each(function ($skill) {
-                $skill->subSkills()->delete();
                 $skill->delete();
             });
         });

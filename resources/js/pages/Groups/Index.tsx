@@ -43,7 +43,7 @@ interface Level {
 
 interface Group {
     id: number;
-    hour: string;
+    hour_start: string;
     days: string;
     note: string;
     level: Level;
@@ -80,7 +80,7 @@ export default function Index({ groupsByDay, availableDays, levels }: Props) {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isDaysPopoverOpen, setIsDaysPopoverOpen] = useState(false);
     const [newGroup, setNewGroup] = useState({
-        hour: '',
+        hour_start: '',
         days: [] as string[],
         level_id: '',
         note: '',
@@ -118,8 +118,10 @@ export default function Index({ groupsByDay, availableDays, levels }: Props) {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
                 body: JSON.stringify({
-                    ...newGroup,
-                    days: newGroup.days.join(', '), // Convertir array a string separado por comas
+                    hour_start: newGroup.hour_start,
+                    days: newGroup.days.join(', '),
+                    level_id: newGroup.level_id,
+                    note: newGroup.note,
                 }),
             });
 
@@ -130,7 +132,7 @@ export default function Index({ groupsByDay, availableDays, levels }: Props) {
 
                 setTimeout(() => {
                     setIsCreateModalOpen(false);
-                    setNewGroup({ hour: '', days: [], level_id: '', note: '' });
+                    setNewGroup({ hour_start: '', days: [], level_id: '', note: '' });
                     setSuccessMessage('');
                     router.reload();
                 }, 1500);
@@ -145,7 +147,7 @@ export default function Index({ groupsByDay, availableDays, levels }: Props) {
     };
 
     const openCreateModal = () => {
-        setNewGroup({ hour: '', days: [], level_id: '', note: '' });
+        setNewGroup({ hour_start: '', days: [], level_id: '', note: '' });
         setError('');
         setSuccessMessage('');
         setIsCreateModalOpen(true);
@@ -335,18 +337,20 @@ export default function Index({ groupsByDay, availableDays, levels }: Props) {
                                 )}
                             </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="hour">
-                                    Hora <span className="text-destructive ml-1">*</span>
-                                </Label>
-                                <Input
-                                    id="hour"
-                                    type="text"
-                                    value={newGroup.hour}
-                                    onChange={(e) => setNewGroup({ ...newGroup, hour: e.target.value })}
-                                    placeholder="Ej: 10:00 - 11:00"
-                                    className={error && !newGroup.hour ? 'border-destructive' : ''}
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="hour_start">
+                                        Hora <span className="text-destructive ml-1">*</span>
+                                    </Label>
+                                    <Input
+                                        id="hour_start"
+                                        type="time"
+                                        value={newGroup.hour_start}
+                                        onChange={(e) => setNewGroup({ ...newGroup, hour_start: e.target.value })}
+                                        className={error ? 'border-destructive' : ''}
+                                        autoFocus
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-2">

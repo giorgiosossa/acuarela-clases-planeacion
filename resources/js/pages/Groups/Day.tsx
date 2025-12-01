@@ -42,7 +42,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Plus, Trash2, UserPlus, CheckCircle2, Clock, ChevronsUpDown, X, GripVertical } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, UserPlus, CheckCircle2, Clock, ChevronsUpDown, X } from 'lucide-react';
 
 interface Skill {
     id: number;
@@ -66,7 +66,7 @@ interface Level {
 
 interface Group {
     id: number;
-    hour: string;
+    hour_start: string;
     days: string;
     note: string;
     level_id: number;
@@ -91,17 +91,19 @@ const DAYS_OPTIONS = [
 ];
 
 export default function Day({ day, groups: initialGroups, levels }: Props) {
-    const [groups, setGroups] = useState<Group[]>(initialGroups);
+    const [groups, setGroups] = useState<Group[]>(
+        [...initialGroups].sort((a, b) => a.hour_start.localeCompare(b.hour_start))
+    );
     const [isCreateGroupModalOpen, setIsCreateGroupModalOpen] = useState(false);
     const [isCreateSwimmerModalOpen, setIsCreateSwimmerModalOpen] = useState(false);
     const [isDaysPopoverOpen, setIsDaysPopoverOpen] = useState(false);
     const [currentGroupId, setCurrentGroupId] = useState<number | null>(null);
     const [levelSkills, setLevelSkills] = useState<Skill[]>([]);
-    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
 
     // Estados para crear grupo
     const [newGroup, setNewGroup] = useState({
-        hour: '',
+        hour_start: '',
         days: [] as string[],
         level_id: '',
         note: '',
@@ -117,31 +119,15 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
 
-    // Funciones de Drag and Drop
-    const handleDragStart = (e: React.DragEvent, index: number) => {
-        setDraggedIndex(index);
-        e.dataTransfer.effectAllowed = 'move';
+    const formatTime = (time: string) => {
+        const [hours, minutes] = time.split(':');
+        const hour = parseInt(hours);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+        return `${displayHour}:${minutes} ${ampm}`;
     };
 
-    const handleDragOver = (e: React.DragEvent, index: number) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
 
-        if (draggedIndex === null || draggedIndex === index) return;
-
-        const newGroups = [...groups];
-        const draggedItem = newGroups[draggedIndex];
-
-        newGroups.splice(draggedIndex, 1);
-        newGroups.splice(index, 0, draggedItem);
-
-        setGroups(newGroups);
-        setDraggedIndex(index);
-    };
-
-    const handleDragEnd = () => {
-        setDraggedIndex(null);
-    };
 
     const toggleDay = (selectedDay: string) => {
         setNewGroup(prev => ({
@@ -173,7 +159,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
                 body: JSON.stringify({
-                    hour: newGroup.hour,
+                    hour_start: newGroup.hour_start,
                     days: newGroup.days.join(', '),
                     level_id: newGroup.level_id,
                     note: newGroup.note,
@@ -188,7 +174,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
 
                 setTimeout(() => {
                     setIsCreateGroupModalOpen(false);
-                    setNewGroup({ hour: '', days: [], level_id: '', note: '' });
+                    setNewGroup({ hour_start: '', days: [], level_id: '', note: '' });
                     setSuccessMessage('');
                 }, 1500);
             } else {
@@ -204,7 +190,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
     // Abrir modal de crear grupo
     const openCreateGroupModal = () => {
         setNewGroup({
-            hour: '',
+            hour_start: '',
             days: [day],
             level_id: '',
             note: ''
@@ -418,23 +404,16 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                             }
 
                             return (
-                                <div
-                                    key={group.id}
-                                    draggable
-                                    onDragStart={(e) => handleDragStart(e, index)}
-                                    onDragOver={(e) => handleDragOver(e, index)}
-                                    onDragEnd={handleDragEnd}
-                                    className={`transition-opacity ${draggedIndex === index ? 'opacity-50' : 'opacity-100'}`}
-                                >
-                                    <Card className="cursor-move hover:shadow-md transition-shadow">
+                                <div key={group.id}>
+                                    <Card className=" hover:shadow-md transition-shadow">
                                         <CardHeader>
                                             <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-1.5">
                                                 <div className="flex items-start gap-2 flex-1">
-                                                    <GripVertical className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+
                                                     <div className="space-y-1">
                                                         <CardTitle className="flex items-center gap-2">
                                                             <Clock className="h-5 w-5 text-primary" />
-                                                            {group.hour}
+                                                            {formatTime(group.hour_start)}
                                                         </CardTitle>
                                                         <CardDescription>
                                                             Nivel: {group.level.name} • Días: {group.days}
@@ -516,7 +495,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                                                                         key={skill.id}
                                                                                         value={skill.id.toString()}
                                                                                     >
-                                                                                        {skill.index + 1 }. {skill.name}
+                                                                                        {skill.index}. {skill.name}
                                                                                     </SelectItem>
                                                                                 ))}
                                                                             </SelectContent>
@@ -647,19 +626,21 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                 )}
                             </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="hour">
-                                    Hora <span className="text-destructive ml-1">*</span>
-                                </Label>
-                                <Input
-                                    id="hour"
-                                    type="text"
-                                    value={newGroup.hour}
-                                    onChange={(e) => setNewGroup({ ...newGroup, hour: e.target.value })}
-                                    placeholder="Ej: 10:00 - 11:00"
-                                    className={error ? 'border-destructive' : ''}
-                                    autoFocus
-                                />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="hour_start">
+                                        Hora <span className="text-destructive ml-1">*</span>
+                                    </Label>
+                                    <Input
+                                        id="hour_start"
+                                        type="time"
+                                        value={newGroup.hour_start}
+                                        onChange={(e) => setNewGroup({ ...newGroup, hour_start: e.target.value })}
+                                        className={error ? 'border-destructive' : ''}
+                                        autoFocus
+                                    />
+                                </div>
+
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="level_id">
@@ -758,7 +739,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                                     <SelectContent>
                                         {levelSkills.map((skill) => (
                                             <SelectItem key={skill.id} value={skill.id.toString()}>
-                                                {skill.index + 1}. {skill.name}
+                                                {skill.index }. {skill.name}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

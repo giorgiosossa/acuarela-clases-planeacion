@@ -18,8 +18,7 @@ class SkillController extends Controller
             'level_id' => 'required|exists:levels,id',
         ]);
 
-        // Obtener el índice más alto para ese level y sumar 1
-        $maxIndex = Skill::where('level_id', $validated['level_id'])->max('index') ?? -1;
+        $maxIndex = Skill::where('level_id', $validated['level_id'])->max('index') ?? 0;
 
         $skill = Skill::create([
             'name' => $validated['name'],

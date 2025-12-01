@@ -18,13 +18,11 @@ class GroupController extends Controller
     {
         $groups = Group::with(['level', 'swimmers.currentSkill'])
             ->withCount('swimmers')
-            ->latest()
+            ->orderBy('hour_start')
             ->get();
 
         $groupsByDay = $groups->groupBy('days');
         $availableDays = $groups->pluck('days')->unique()->values();
-
-        // ✅ Agregar levels para el modal de crear
         $levels = Level::all();
 
         return Inertia::render('Groups/Index', [
@@ -39,6 +37,7 @@ class GroupController extends Controller
     {
         $groups = Group::with(['level', 'swimmers.currentSkill'])
             ->where('days', $day)
+            ->orderBy('hour_start')
             ->get();
 
         $levels = Level::all();
@@ -54,7 +53,7 @@ class GroupController extends Controller
     public function storeFromModal(Request $request)
     {
         $validated = $request->validate([
-            'hour' => 'required|string|max:255',
+            'hour_start' => 'required|date_format:H:i',
             'days' => 'required|string|max:255',
             'note' => 'nullable|string',
             'level_id' => 'required|exists:levels,id',

@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('groups', function (Blueprint $table) {
             $table->id();
-            $table->string('hour');
+            $table->time('hour_start');
             $table->string('days');
-            $table->string('note');
+            $table->text('note')->nullable();
             $table->foreignId('level_id')->constrained();
             $table->timestamps();
         });
