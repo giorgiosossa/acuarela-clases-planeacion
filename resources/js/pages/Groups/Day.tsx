@@ -398,7 +398,7 @@ export default function Day({ day, groups: initialGroups, levels }: Props) {
                     </div>
 
                     <div className="space-y-6">
-                        {groups.map((group, index) => {
+                        {groups.map((group) => {
                             if (!groupSkills[group.id]) {
                                 loadGroupSkills(group.level_id, group.id);
                             }
