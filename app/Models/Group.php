@@ -28,4 +28,9 @@ class Group extends Model
         return $this->hasMany(Swimmer::class);
     }
 
+    public function generations()
+    {
+        return $this->hasMany(ClassGeneration::class)->orderBy('created_at', 'desc');
+    }
+
 }

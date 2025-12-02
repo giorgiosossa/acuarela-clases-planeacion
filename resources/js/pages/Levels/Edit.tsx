@@ -48,6 +48,8 @@ interface Level {
     name: string;
     program_id: number;
     swimmer_paraments: string | null;
+    objective: string | null;
+    description: string | null;
     program: Program;
 }
 
@@ -70,6 +72,8 @@ export default function Edit({ level, programs: initialPrograms, skills, canCrea
         name: level.name,
         program_id: level.program_id.toString(),
         swimmer_paraments: level.swimmer_paraments || '',
+        objective: level.objective || '',
+        description: level.description || '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -219,6 +223,32 @@ export default function Edit({ level, programs: initialPrograms, skills, canCrea
                                                     {errors.program_id}
                                                 </p>
                                             )}
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="objective">
+                                                Objetivo del Nivel
+                                            </Label>
+                                            <Textarea
+                                                id="objective"
+                                                value={data.objective}
+                                                onChange={(e) => setData('objective', e.target.value)}
+                                                placeholder="¿Qué debe lograr el alumno en este nivel?"
+                                                rows={2}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="description">
+                                                Descripción Técnica
+                                            </Label>
+                                            <Textarea
+                                                id="description"
+                                                value={data.description}
+                                                onChange={(e) => setData('description', e.target.value)}
+                                                placeholder="Descripción detallada de la metodología..."
+                                                rows={3}
+                                            />
                                         </div>
 
                                         <div className="space-y-2">

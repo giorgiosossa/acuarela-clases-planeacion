@@ -16,6 +16,9 @@ class SkillController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:skills,name',
             'level_id' => 'required|exists:levels,id',
+            'objective' => 'nullable|string',
+            'description' => 'nullable|string',
+            'drills' => 'nullable|string',
         ]);
 
         $maxIndex = Skill::where('level_id', $validated['level_id'])->max('index') ?? 0;
@@ -24,6 +27,9 @@ class SkillController extends Controller
             'name' => $validated['name'],
             'level_id' => $validated['level_id'],
             'index' => $maxIndex + 1,
+            'objective' => $validated['objective'] ?? null,
+            'description' => $validated['description'] ?? null,
+            'drills' => $validated['drills'] ?? null,
         ]);
 
         return response()->json([
@@ -60,6 +66,9 @@ class SkillController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:skills,name,' . $skill->id,
+            'objective' => 'nullable|string',
+            'description' => 'nullable|string',
+            'drills' => 'nullable|string',
         ]);
 
         $skill->update($validated);

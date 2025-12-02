@@ -33,15 +33,20 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { GripVertical, Plus, Pencil, Trash2, CheckCircle2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { GripVertical, Plus, Pencil, Trash2, CheckCircle2, Eye, Target, BookOpen, Dumbbell } from 'lucide-react';
 
 interface Skill {
     id: number;
     name: string;
     index: number;
     level_id: number;
+    objective?: string;
+    description?: string;
+    drills?: string;
 }
 
 interface Props {
@@ -49,10 +54,11 @@ interface Props {
     initialSkills: Skill[];
 }
 
-function SortableSkillItem({ skill, onEdit, onDelete }: {
+function SortableSkillItem({ skill, onEdit, onDelete, onView }: {
     skill: Skill;
     onEdit: (skill: Skill) => void;
     onDelete: (id: number) => void;
+    onView: (skill: Skill) => void;
 }) {
     const {
         attributes,
@@ -73,33 +79,57 @@ function SortableSkillItem({ skill, onEdit, onDelete }: {
         <div
             ref={setNodeRef}
             style={style}
-            className="flex dark:bg-black items-center gap-2 p-3 bg-white border rounded-lg hover:border-primary transition-colors"
+            className="flex dark:bg-black items-center gap-2 p-3 bg-white border rounded-lg hover:border-primary transition-colors group"
         >
             <button
-                className="cursor-grab active:cursor-grabbing touch-none"
+                className="cursor-grab active:cursor-grabbing touch-none p-1 hover:bg-muted rounded"
                 {...attributes}
                 {...listeners}
             >
                 <GripVertical className="h-5 w-5 text-muted-foreground" />
             </button>
-            <span className="flex font-medium w-1/3">{skill.index} </span>
-            <span className="flex font-medium w-2/3">{skill.name} </span>
+            
+            <div 
+                className="flex items-center gap-3 flex-1 cursor-pointer" 
+                onClick={() => onView(skill)}
+            >
+                <Badge variant="outline" className="w-8 h-8 flex items-center justify-center rounded-full p-0">
+                    {skill.index}
+                </Badge>
+                <div className="flex flex-col">
+                     <span className="font-medium group-hover:text-primary transition-colors">{skill.name}</span>
+                     {(skill.objective || skill.description) && (
+                         <span className="text-xs text-muted-foreground flex items-center gap-1">
+                             <Eye className="h-3 w-3" /> Ver detalles
+                         </span>
+                     )}
+                </div>
+            </div>
 
-
-            <div className="flex gap-2">
-                <Button
-                    variant="outline"
+            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                 <Button
+                    variant="ghost"
                     size="sm"
-                    onClick={() => onEdit(skill)}
+                    className="h-8 w-8 p-0"
+                    onClick={() => onView(skill)}
                 >
-                    <Pencil className="h-4 w-4" />
+                    <Eye className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                 </Button>
                 <Button
-                    variant="destructive"
+                    variant="ghost"
                     size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => onEdit(skill)}
+                >
+                    <Pencil className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:bg-destructive/10"
                     onClick={() => onDelete(skill.id)}
                 >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
             </div>
         </div>
@@ -110,8 +140,18 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
     const [skills, setSkills] = useState<Skill[]>(initialSkills);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
-    const [skillName, setSkillName] = useState('');
+    const [viewingSkill, setViewingSkill] = useState<Skill | null>(null);
+    
+    // Form State
+    const [formData, setFormData] = useState({
+        name: '',
+        objective: '',
+        description: '',
+        drills: ''
+    });
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
@@ -168,7 +208,7 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
                 body: JSON.stringify({
-                    name: skillName,
+                    ...formData,
                     level_id: levelId,
                 }),
             });
@@ -181,7 +221,7 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
 
                 setTimeout(() => {
                     setIsCreateModalOpen(false);
-                    setSkillName('');
+                    setFormData({ name: '', objective: '', description: '', drills: '' });
                     setSuccessMessage('');
                 }, 1500);
             } else {
@@ -208,7 +248,7 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
                 },
-                body: JSON.stringify({ name: skillName }),
+                body: JSON.stringify(formData),
             });
 
             const result = await response.json();
@@ -220,7 +260,7 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
                 setTimeout(() => {
                     setIsEditModalOpen(false);
                     setEditingSkill(null);
-                    setSkillName('');
+                    setFormData({ name: '', objective: '', description: '', drills: '' });
                     setSuccessMessage('');
                 }, 1500);
             } else {
@@ -265,7 +305,7 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
     };
 
     const openCreateModal = () => {
-        setSkillName('');
+        setFormData({ name: '', objective: '', description: '', drills: '' });
         setError('');
         setSuccessMessage('');
         setIsCreateModalOpen(true);
@@ -273,10 +313,20 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
 
     const openEditModal = (skill: Skill) => {
         setEditingSkill(skill);
-        setSkillName(skill.name);
+        setFormData({
+            name: skill.name,
+            objective: skill.objective || '',
+            description: skill.description || '',
+            drills: skill.drills || ''
+        });
         setError('');
         setSuccessMessage('');
         setIsEditModalOpen(true);
+    };
+    
+    const openViewModal = (skill: Skill) => {
+        setViewingSkill(skill);
+        setIsViewModalOpen(true);
     };
 
     return (
@@ -287,7 +337,7 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
                         <div>
                             <CardTitle>Habilidades</CardTitle>
                             <CardDescription>
-                                Arrastra para reordenar las habilidades
+                                Arrastra para reordenar. Haz clic en una habilidad para ver detalles.
                             </CardDescription>
                         </div>
                         <Button onClick={openCreateModal}>
@@ -314,6 +364,7 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
                                             skill={skill}
                                             onEdit={openEditModal}
                                             onDelete={handleDeleteSkill}
+                                            onView={openViewModal}
                                         />
                                     ))}
                                 </div>
@@ -331,11 +382,11 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
 
             {/* Modal Crear */}
             <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-                <DialogContent>
+                <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Crear Nueva Habilidad</DialogTitle>
                         <DialogDescription>
-                            Agrega una nueva habilidad a este nivel
+                            Define los detalles técnicos de la habilidad.
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleCreateSkill}>
@@ -356,8 +407,8 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
                                 <Input
                                     id="skill_name"
                                     type="text"
-                                    value={skillName}
-                                    onChange={(e) => setSkillName(e.target.value)}
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({...formData, name: e.target.value})}
                                     placeholder="Ej: Respiración básica"
                                     className={error ? 'border-destructive' : ''}
                                     autoFocus
@@ -365,6 +416,36 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
                                 {error && (
                                     <p className="text-sm text-destructive">{error}</p>
                                 )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="skill_objective">Objetivo</Label>
+                                <Textarea
+                                    id="skill_objective"
+                                    value={formData.objective}
+                                    onChange={(e) => setFormData({...formData, objective: e.target.value})}
+                                    placeholder="¿Qué se busca lograr con esta habilidad?"
+                                    rows={2}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="skill_desc">Descripción Técnica</Label>
+                                <Textarea
+                                    id="skill_desc"
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                    placeholder="Detalles técnicos de la ejecución..."
+                                    rows={3}
+                                />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="skill_drills">Ejercicios Recomendados (Drills)</Label>
+                                <Textarea
+                                    id="skill_drills"
+                                    value={formData.drills}
+                                    onChange={(e) => setFormData({...formData, drills: e.target.value})}
+                                    placeholder="Lista de ejercicios sugeridos para esta habilidad..."
+                                    rows={3}
+                                />
                             </div>
                         </div>
                         <DialogFooter>
@@ -386,11 +467,11 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
 
             {/* Modal Editar */}
             <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-                <DialogContent>
+                <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Editar Habilidad</DialogTitle>
                         <DialogDescription>
-                            Modifica el nombre de la habilidad
+                            Modifica los detalles de la habilidad
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleEditSkill}>
@@ -411,8 +492,8 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
                                 <Input
                                     id="edit_skill_name"
                                     type="text"
-                                    value={skillName}
-                                    onChange={(e) => setSkillName(e.target.value)}
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({...formData, name: e.target.value})}
                                     placeholder="Ej: Respiración básica"
                                     className={error ? 'border-destructive' : ''}
                                     autoFocus
@@ -420,6 +501,36 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
                                 {error && (
                                     <p className="text-sm text-destructive">{error}</p>
                                 )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit_skill_objective">Objetivo</Label>
+                                <Textarea
+                                    id="edit_skill_objective"
+                                    value={formData.objective}
+                                    onChange={(e) => setFormData({...formData, objective: e.target.value})}
+                                    placeholder="¿Qué se busca lograr con esta habilidad?"
+                                    rows={2}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit_skill_desc">Descripción Técnica</Label>
+                                <Textarea
+                                    id="edit_skill_desc"
+                                    value={formData.description}
+                                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                    placeholder="Detalles técnicos de la ejecución..."
+                                    rows={3}
+                                />
+                            </div>
+                             <div className="space-y-2">
+                                <Label htmlFor="edit_skill_drills">Ejercicios Recomendados (Drills)</Label>
+                                <Textarea
+                                    id="edit_skill_drills"
+                                    value={formData.drills}
+                                    onChange={(e) => setFormData({...formData, drills: e.target.value})}
+                                    placeholder="Lista de ejercicios sugeridos para esta habilidad..."
+                                    rows={3}
+                                />
                             </div>
                         </div>
                         <DialogFooter>
@@ -436,6 +547,66 @@ export default function SkillsManager({ levelId, initialSkills }: Props) {
                             </Button>
                         </DialogFooter>
                     </form>
+                </DialogContent>
+            </Dialog>
+
+             {/* Modal Ver Detalles */}
+             <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+                <DialogContent className="sm:max-w-xl max-h-[80vh] overflow-y-auto">
+                    <DialogHeader>
+                        <div className="flex items-center gap-2">
+                             <Badge variant="outline" className="text-base px-2 py-0.5">{viewingSkill?.index}</Badge>
+                             <DialogTitle className="text-xl">{viewingSkill?.name}</DialogTitle>
+                        </div>
+                        <DialogDescription>
+                            Detalles completos de la habilidad
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-6 py-4">
+                        <div className="space-y-2">
+                            <h4 className="flex items-center gap-2 font-semibold text-primary">
+                                <Target className="h-4 w-4" /> Objetivo
+                            </h4>
+                            <p className="text-sm text-foreground/80 leading-relaxed bg-muted/40 p-3 rounded-md">
+                                {viewingSkill?.objective || 'No definido'}
+                            </p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <h4 className="flex items-center gap-2 font-semibold text-primary">
+                                <BookOpen className="h-4 w-4" /> Descripción Técnica
+                            </h4>
+                            <p className="text-sm text-foreground/80 leading-relaxed bg-muted/40 p-3 rounded-md">
+                                {viewingSkill?.description || 'No definida'}
+                            </p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <h4 className="flex items-center gap-2 font-semibold text-primary">
+                                <Dumbbell className="h-4 w-4" /> Ejercicios Recomendados
+                            </h4>
+                             <p className="text-sm text-foreground/80 leading-relaxed bg-muted/40 p-3 rounded-md whitespace-pre-wrap">
+                                {viewingSkill?.drills || 'No definidos'}
+                            </p>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                         <Button
+                            variant="outline"
+                            onClick={() => {
+                                setIsViewModalOpen(false);
+                                if (viewingSkill) openEditModal(viewingSkill);
+                            }}
+                        >
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Editar
+                        </Button>
+                        <Button onClick={() => setIsViewModalOpen(false)}>
+                            Cerrar
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </>

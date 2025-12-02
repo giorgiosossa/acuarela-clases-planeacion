@@ -35,7 +35,13 @@ class GroupController extends Controller
     // Ver grupos de un día específico
     public function showDay($day)
     {
-        $groups = Group::with(['level', 'swimmers.currentSkill'])
+        $groups = Group::with([
+                'level', 
+                'swimmers.currentSkill',
+                'generations' => function($query) {
+                    $query->where('status', 'completed')->latest()->limit(5);
+                }
+            ])
             ->where('days', $day)
             ->orderBy('hour_start')
             ->get();

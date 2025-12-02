@@ -10,6 +10,7 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\GroupExportController;
+use App\Http\Controllers\ClassGeneratorController;
 
 
 
@@ -46,6 +47,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/groups/level/{levelId}/skills', [GroupController::class, 'getLevelSkills']);
     Route::get('/groups/report', [GroupController::class, 'report'])->name('groups.report');
     Route::get('/groups/export-pdf', [GroupController::class, 'exportPdf'])->name('groups.export');
+    Route::post('/groups/generate-class', [ClassGeneratorController::class, 'generate'])->name('groups.generate-class');
+    Route::get('/groups/generate-class/status/{id}', [ClassGeneratorController::class, 'checkStatus']);
 
     // Rutas para Swimmers
     Route::post('/swimmers/modal', [SwimmerController::class, 'storeFromModal']);

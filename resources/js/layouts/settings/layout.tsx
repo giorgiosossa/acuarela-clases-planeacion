@@ -17,6 +17,11 @@ const sidebarNavItems: NavItem[] = [
         icon: null,
     },
     {
+        title: 'Class Prompt',
+        href: '/settings/prompt',
+        icon: null,
+    },
+    {
         title: 'Password',
         href: editPassword(),
         icon: null,
