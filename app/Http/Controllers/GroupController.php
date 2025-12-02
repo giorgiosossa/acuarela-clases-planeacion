@@ -294,4 +294,74 @@ class GroupController extends Controller
 
         return $pdf->download('reporte-grupos-' . now()->format('Y-m-d') . '.pdf');
     }
+
+
+    // En GroupController.php
+    public function getGroupsWithCalendar()
+    {
+        $daysOrder = [
+            'Lunes' => 1, 'Martes' => 2, 'Miércoles' => 3, 'Jueves' => 4,
+            'Viernes' => 5, 'Sábado' => 6, 'Domingo' => 7, 'Especial' => 8,
+        ];
+
+        $groups = Group::with('level', 'swimmers.currentSkill')
+            ->get()
+            ->sortBy(function ($group) use ($daysOrder) {
+                $firstDay = trim(explode(',', $group->days)[0]);
+                return $daysOrder[$firstDay] ?? 999;
+            })
+            ->values();
+
+        $daysMap = [
+            'Lunes' => 'Monday', 'Martes' => 'Tuesday', 'Miércoles' => 'Wednesday',
+            'Jueves' => 'Thursday', 'Viernes' => 'Friday', 'Sábado' => 'Saturday',
+            'Domingo' => 'Sunday',
+        ];
+
+        return $groups->map(function ($group) use ($daysMap) {
+            $currentMonth = Carbon::now();
+            $monthStart = $currentMonth->copy()->startOfMonth();
+            $monthEnd = $currentMonth->copy()->endOfMonth();
+            $groupDays = array_map('trim', explode(',', $group->days));
+
+            $datesInMonth = [];
+            for ($date = $monthStart->copy(); $date->lte($monthEnd); $date->addDay()) {
+                $dayNameInSpanish = array_search($date->format('l'), $daysMap);
+                if ($dayNameInSpanish && in_array($dayNameInSpanish, $groupDays)) {
+                    $datesInMonth[] = [
+                        'day' => $dayNameInSpanish,
+                        'date' => $date->format('Y-m-d'),
+                        'day_number' => $date->day,
+                        'formatted' => $date->format('d/m'),
+                    ];
+                }
+            }
+
+            $uniqueSkillIndexes = $group->swimmers
+                ->pluck('currentSkill.index')
+                ->unique()
+                ->sort()
+                ->values()
+                ->toArray();
+
+            $totalSkillsInLevel = Skill::where('level_id', $group->level_id)->max('index') ?? 0;
+
+            return [
+                'id' => $group->id,
+                'hour_start' => $group->hour_start,
+                'days' => $group->days,
+                'note' => $group->note,
+                'level' => $group->level,
+                'swimmers' => $group->swimmers,
+                'created_at' => $group->created_at,
+                'month_name' => $currentMonth->locale('es')->translatedFormat('F Y'),
+                'month_year' => $currentMonth->format('Y-m'),
+                'dates_in_month' => $datesInMonth,
+                'unique_skill_indexes' => $uniqueSkillIndexes,
+                'max_skill_index' => $totalSkillsInLevel,
+            ];
+        });
+    }
+
+
 }

@@ -18,7 +18,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { FileDown, Search, ArrowLeft, Calendar, Clock, Users } from 'lucide-react';
+import { FileDown, Search, ArrowLeft, Calendar, Clock} from 'lucide-react';
 
 interface Skill {
     name: string;

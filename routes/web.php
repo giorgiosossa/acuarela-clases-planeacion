@@ -7,6 +7,7 @@ use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\LevelController;
 use App\Http\Controllers\SwimmerController;
 use App\Http\Controllers\GroupController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SkillController;
 use App\Http\Controllers\GroupExportController;
 
@@ -20,10 +21,9 @@ Route::get('/', function () {
 })->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
 
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
     // Rutas de Programs
     Route::resource('programs', ProgramController::class)->names('programs');
     Route::post('/programs/modal', [ProgramController::class, 'storeFromModal'])->name('programs.storeFromModal');
