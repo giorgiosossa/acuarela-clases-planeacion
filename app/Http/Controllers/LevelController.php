@@ -42,7 +42,9 @@ class LevelController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'program_id' => 'required|exists:programs,id',
-            'swimmer_paraments' => 'nullable|string'
+            'swimmer_paraments' => 'nullable|string',
+            'objective' => 'nullable|string',
+            'description' => 'nullable|string',
         ]);
 
         $level = Level::create($validated);
@@ -70,7 +72,9 @@ class LevelController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'program_id' => 'required|exists:programs,id',
-            'swimmer_paraments' => 'nullable|string'
+            'swimmer_paraments' => 'nullable|string',
+            'objective' => 'nullable|string',
+            'description' => 'nullable|string',
         ]);
 
         $level->update($validated);

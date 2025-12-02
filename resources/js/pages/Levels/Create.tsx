@@ -60,6 +60,8 @@ export default function Create({ programs: initialPrograms, canCreateProgram = t
         name: '',
         program_id: '',
         swimmer_paraments: '',
+        objective: '',
+        description: '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -207,6 +209,32 @@ export default function Create({ programs: initialPrograms, canCreateProgram = t
                                             {errors.program_id}
                                         </p>
                                     )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="objective">
+                                        Objetivo del Nivel
+                                    </Label>
+                                    <Textarea
+                                        id="objective"
+                                        value={data.objective}
+                                        onChange={(e) => setData('objective', e.target.value)}
+                                        placeholder="¿Qué debe lograr el alumno en este nivel?"
+                                        rows={2}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="description">
+                                        Descripción Técnica
+                                    </Label>
+                                    <Textarea
+                                        id="description"
+                                        value={data.description}
+                                        onChange={(e) => setData('description', e.target.value)}
+                                        placeholder="Descripción detallada de la metodología..."
+                                        rows={3}
+                                    />
                                 </div>
 
                                 <div className="space-y-2">

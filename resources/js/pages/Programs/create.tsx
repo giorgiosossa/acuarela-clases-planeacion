@@ -13,9 +13,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
 
+import { Textarea } from '@/components/ui/textarea';
+
 export default function Create() {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
+        description: '',
     });
 
     const submit: FormEventHandler = (e) => {
@@ -66,6 +69,19 @@ export default function Create() {
                                             {errors.name}
                                         </p>
                                     )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="description">
+                                        Descripción
+                                    </Label>
+                                    <Textarea
+                                        id="description"
+                                        value={data.description}
+                                        onChange={(e) => setData('description', e.target.value)}
+                                        placeholder="Descripción del programa..."
+                                        rows={3}
+                                    />
                                 </div>
 
                                 <div className="flex items-center justify-end gap-4">

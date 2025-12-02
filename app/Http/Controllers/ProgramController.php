@@ -32,6 +32,7 @@ class ProgramController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
         ]);
 
         $program = Program::create($validated);
@@ -50,6 +51,7 @@ class ProgramController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
         ]);
 
         Program::create($validated);
@@ -87,6 +89,7 @@ class ProgramController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
         ]);
 
         $program->update($validated);

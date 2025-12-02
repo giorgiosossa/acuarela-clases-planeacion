@@ -15,6 +15,7 @@ class Swimmer extends Model
         'group_id',
         'review',
         'complement',
+        'observations',
     ];
 
     public function group(){

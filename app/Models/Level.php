@@ -12,7 +12,9 @@ class Level extends Model
     protected $fillable = [
         'name',
         'program_id',
-        'swimmer_paraments'
+        'swimmer_paraments',
+        'objective',
+        'description'
     ];
 
     public function program()

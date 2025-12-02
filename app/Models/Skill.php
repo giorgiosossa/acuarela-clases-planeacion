@@ -11,8 +11,11 @@ class Skill extends Model
 
     protected $fillable = [
         'name',
+        'level_id',
         'index',
-        'level_id'
+        'objective',
+        'description',
+        'drills'
     ];
 
     protected $casts = [

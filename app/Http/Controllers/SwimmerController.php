@@ -15,15 +15,16 @@ class SwimmerController extends Controller
             'name' => 'required|string|max:255',
             'skill_id' => 'required|exists:skills,id',
             'group_id' => 'required|exists:groups,id',
+            'observations' => 'nullable|string'
         ]);
 
         $swimmer = Swimmer::create($validated);
-        $swimmer->load('currentSkill');
+        $swimmer->load('currentSkill'); // Cargar la relación para devolverla
 
         return response()->json([
             'success' => true,
-            'swimmer' => $swimmer,
-            'message' => 'Nadador creado exitosamente.'
+            'message' => 'Nadador agregado correctamente',
+            'swimmer' => $swimmer
         ]);
     }
 
@@ -35,7 +36,9 @@ class SwimmerController extends Controller
         ]);
 
         $swimmer->update($validated);
-        $swimmer->load('currentSkill');
+        
+        // Recargar el modelo completo con la relación actualizada
+        $swimmer = $swimmer->fresh('currentSkill');
 
         return response()->json([
             'success' => true,
